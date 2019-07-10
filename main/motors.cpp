@@ -2,6 +2,14 @@
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
 // Last updated 10/7/19
 
+// Sabretooth driver set to:
+// 1 - Off
+// 2 - On
+// 3 - Off
+// 4 - Off
+// 5 - On
+// 6 - Off
+
 
 #include <Servo.h>
 #include "motors.h"
