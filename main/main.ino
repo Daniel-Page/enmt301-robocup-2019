@@ -9,6 +9,8 @@
 #include "sensors.h"
 
 
+enum modes {SEARCHING, KNOCKOVER, PICKUP, BACKOFF, FINISHED}; // Implement later
+
 // Definitions for IR sensor
 int analogInPin = A0;  
 int sensorValue = 0;
@@ -37,4 +39,4 @@ void loop()
     sensorValue = analogRead(analogInPin);
     Serial.println(sensorValue);
     delay(2); // 2 ms ADC settling time (500Hz)
-} 
+}
