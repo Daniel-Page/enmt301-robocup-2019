@@ -1,38 +1,35 @@
-// main.ino
+// main.ino - A program that controls the behaviour of a robot as it competes in the robocup competition.
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
 // Last updated 9/7/19
 
-/*
-Useing port S1 and channels S1 and S2 to drive the two motors on the robot.
-The motors must be connected through the Sabertooth driver.
-The sabertooth must be in mode Microcontroller pulses, independent linear control mode.
-1000us to 2000us control the speed and direction. 1500us is stop.
-Any speed outside this range will be ignored.
-*/
+// Note the board has to be set to "Arduino Mega ADK" in Tools->Board
+
 
 #include <Servo.h>
 #include "motors.h"
 
 
-//int analogInPin = A0;  
-//int sensorValue = 0;
+int analogInPin = A0;  
+int sensorValue = 0;
 
 
 void setup()
 { 
   pinMode(49, OUTPUT);                 //Pin 49 is used to enable IO power
   digitalWrite(49, 1);                 //Enable IO power on main CPU board
-  //Serial.begin(9600); // 9600 bit/s
+  Serial.begin(9600); // 9600 bit/s
   initMotors();
+  setMotor(RIGHT, CLOCKWISE, 100);    // Sets the left motor to 100% speed clockwise
+  setMotor(LEFT, ANTICLOCKWISE, 100); // Sets the right motor to 100% speed anticlockwise
 }
 
 
 void loop() 
 { 
-  setMotor(RIGHT, CLOCKWISE, 100);    // Sets motor to 100% speed clockwise
-  setMotor(LEFT, ANTICLOCKWISE, 100); // Sets motor to 100% speed clockwise
-  delay(1500); // 1.5s ADC settling time
-  
-  //sensorValue = analogRead(analogInPin);
-  //Serial.println(sensorValue);
+  // Find the equation for calculating the distance based on the sensor ouput. Ultrasonic sensor?
+  // Implement feedback control?
+  // Implement state machine for robot modes
+  sensorValue = analogRead(analogInPin);
+  Serial.println(sensorValue);
+  delay(2); // 2 ms ADC settling time
 } 

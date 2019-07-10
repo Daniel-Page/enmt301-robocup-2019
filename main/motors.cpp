@@ -1,4 +1,4 @@
-// motors.cpp    
+// motors.cpp - Controls the motors of the robot.
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
 // Last updated 9/7/19
 
@@ -7,14 +7,16 @@
 #include "motors.h"
 
 
-Servo myservoLeft; // create servo object to control a servo A
-Servo myservoRight; // create servo object to control a servo B
+Servo myservoLeft; // Creates a servo object to control the left motor
+Servo myservoRight; // Creates a servo object to control the right motor
 
 
+// Initialises both of the DC motors
 void initMotors(void)
 {
-   myservoLeft.attach(3);  // attaches the servo pin 3 to the servo object
-   myservoRight.attach(2);  // attaches the servo pin 2 to the servo object  
+  // The pins can be switched for different orientations of the robot
+   myservoLeft.attach(2);  // attaches the servo pin 3 to the servo object
+   myservoRight.attach(3);  // attaches the servo pin 2 to the servo object  
 }
 
 
