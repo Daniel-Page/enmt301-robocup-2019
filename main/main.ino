@@ -9,6 +9,7 @@
 #include "sensors.h"
 
 
+// Definitions for IR sensor
 int analogInPin = A0;  
 int sensorValue = 0;
 
@@ -23,16 +24,17 @@ void setup()
     initMotors();
     setMotor(RIGHT, CLOCKWISE, 100);    // Sets the right motor to 100% speed clockwise
     setMotor(LEFT, ANTICLOCKWISE, 100); // Sets the left motor to 100% speed anticlockwise
+    // setMotor(LEFT, STATIONARY, 0);   // Stops left motor
 }
 
 
 void loop() 
 { 
-    // Find the equation for calculating the distance based on the sensor ouput. Ultrasonic sensor?
-    // Implement feedback control?
+    // Find the equation for calculating the distance based on the sensor ouput. Test ultrasonic sensor?
+    // Implement feedback control? PD or PID
     // Implement state machine for robot modes
     
     sensorValue = analogRead(analogInPin);
     Serial.println(sensorValue);
-    delay(2); // 2 ms ADC settling time
+    delay(2); // 2 ms ADC settling time (500Hz)
 } 
