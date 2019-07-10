@@ -1,52 +1,66 @@
 // motors.cpp - Controls the motors of the robot.
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
-// Last updated 9/7/19
+// Last updated 10/7/19
 
 
 #include <Servo.h>
 #include "motors.h"
 
 
-Servo myservoLeft; // Creates a servo object to control the left motor
+#define LEFT_SERVO_PIN  2
+#define RIGHT_SERVO_PIN 3
+
+
+Servo myservoLeft;  // Creates a servo object to control the left motor
 Servo myservoRight; // Creates a servo object to control the right motor
 
 
-// Initialises both of the DC motors
+// Initialises the pins for both of the DC motors
 void initMotors(void)
 {
-  // The pins can be switched for different orientations of the robot
-   myservoLeft.attach(2);  // attaches the servo pin 3 to the servo object
-   myservoRight.attach(3);  // attaches the servo pin 2 to the servo object  
+    // The pins can be switched for different orientations of the robot
+    myservoLeft.attach(LEFT_SERVO_PIN);  // Attaches the servo pin 3 to the servo object
+    myservoRight.attach(RIGHT_SERVO_PIN); // Attaches the servo pin 2 to the servo object  
 }
 
 
-// Sets the speed of a motor
-// e.g. setMotor(LEFT, CLOCKWISE, 50) sets the speed of the left motor to 50% clockwise
-void setMotor(int motor, int motor_direction, float percentage_power)
+// Sets the speed and direction of a motor based on the input paramters
+// setMotor(Motor: LEFT/RIGHT Motor, Direction: CLOCKWISE/ANTICLOCKWISE/STATIONARY, % Speed 0-100)
+void setMotor(int motor, int motor_direction, float percentage_speed)
 {
     switch(motor)
     {
         case LEFT:
             switch(motor_direction)
             {
+                case STATIONARY:
+                    // 1500us is stationary
+                    myservoLeft.writeMicroseconds(1500);
+                    break;
                 case CLOCKWISE:
-                    myservoLeft.writeMicroseconds(1500-percentage_power/100*500);
+                    // 1000us is anticlockwise
+                    myservoLeft.writeMicroseconds(1500-percentage_speed/100*500);
                     break;
                 case ANTICLOCKWISE:
-                    myservoLeft.writeMicroseconds(1500+percentage_power/100*500);
+                    // 2000us is clockwise
+                    myservoLeft.writeMicroseconds(1500+percentage_speed/100*500);
                     break;
             }
             break;
         case RIGHT:
             switch(motor_direction)
             {
+                case STATIONARY:
+                    // 1500us is stationary
+                    myservoRight.writeMicroseconds(1500);
+                    break;
                 case CLOCKWISE:
-                // 1000us is anticlockwise
-                    myservoRight.writeMicroseconds(1500-percentage_power/100*500); 
+                    // 1000us is anticlockwise
+                    myservoRight.writeMicroseconds(1500-percentage_speed/100*500); 
                     break;
                 case ANTICLOCKWISE:
-                // 2000us is clockwise
-                    myservoRight.writeMicroseconds(1500+percentage_power/100*500);
+                    // 2000us is clockwise
+                    myservoRight.writeMicroseconds(1500+percentage_speed/100*500);
                     break;
             }
             break;
