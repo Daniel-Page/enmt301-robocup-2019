@@ -1,6 +1,5 @@
 // main.ino - A program that controls the behaviour of a robot to compete in the robocup competition.
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
-// Last updated 10/7/19
 
 // Note the board has to be set to "Arduino Mega ADK" in Tools->Board in the Arduino program.
 
@@ -18,8 +17,8 @@ int sensorValue = 0;
 
 void setup()
 { 
-    pinMode(49, OUTPUT);                 // Pin 49 is used to enable IO power
-    digitalWrite(49, 1);                 // Enable IO power on main CPU board
+    pinMode(49, OUTPUT); // Pin 49 is used to enable IO power
+    digitalWrite(49, 1); // Enable IO power on main CPU board
     
     Serial.begin(9600); // 9600 bit/s
     

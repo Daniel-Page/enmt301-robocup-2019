@@ -1,6 +1,5 @@
 // motors.cpp - Controls the motors of the robot.
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
-// Last updated 10/7/19
 
 // Sabretooth driver connected to 13V and the DIP switches set to:
 // 1 - Off
@@ -19,15 +18,14 @@
 #define RIGHT_SERVO_PIN 3
 
 
-Servo myservoLeft;  // Creates a servo object to control the left motor
-Servo myservoRight; // Creates a servo object to control the right motor
+Servo myservoLeft, myservoRight; // Creates servo objects to control the left and right motors
 
 
 // Initialises the pins for both of the DC motors
 void initMotors(void)
 {
     // The pins can be switched for different orientations of the robot
-    myservoLeft.attach(LEFT_SERVO_PIN);  // Attaches the servo pin 3 to the servo object
+    myservoLeft.attach(LEFT_SERVO_PIN);   // Attaches the servo pin 3 to the servo object
     myservoRight.attach(RIGHT_SERVO_PIN); // Attaches the servo pin 2 to the servo object  
 }
 

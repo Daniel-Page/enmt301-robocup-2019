@@ -1,6 +1,5 @@
 // sensors.h    
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
-// Last updated 10/7/19
 
 
 #ifndef SENSORS_H_
