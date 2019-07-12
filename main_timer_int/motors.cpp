@@ -1,4 +1,4 @@
-// motors.cpp - Controls the motors of the robot.
+// motors.cpp - Contains all of the functions related to the motors of the robot.
 // Developed by Sasha Cox, Dervla Braem & Daniel Page
 
 // Sabretooth driver connected to 13V and the DIP switches set to:
