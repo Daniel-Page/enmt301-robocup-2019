@@ -2,11 +2,11 @@
 This sample code is for testing the 4 stepper motors
 Each motor will iturn rotate forward then backward
 */
-int M1dirpin   = 39;
-int M1steppin  = 38;
+int M1dirpin   = 31;
+int M1steppin  = 30;
 
-int M2dirpin   = 41;
-int M2steppin  = 40;
+int M2dirpin   = 32;
+int M2steppin  = 33;
 
 int M3dirpin = 45;
 int M3steppin = 44;

@@ -16,4 +16,7 @@ void initMotors(void);
 void setMotor(int motor, int motor_direction, float percentage_power);
 
 
+void turnRobot(int turn_direction, float percentage_speed);
+
+
 #endif /* MOTORS_H_ */

@@ -71,3 +71,19 @@ void setMotor(int motor, int motor_direction, float percentage_speed)
             break;
     }
 }
+
+
+void turnRobot(int turn_direction, float percentage_speed)
+{
+  switch(turn_direction)
+    {
+        case CLOCKWISE:
+            setMotor(RIGHT, ANTICLOCKWISE, percentage_speed);   
+            setMotor(LEFT, CLOCKWISE, percentage_speed);   
+            break;
+        case ANTICLOCKWISE:
+            setMotor(RIGHT, CLOCKWISE, percentage_speed);   
+            setMotor(LEFT, ANTICLOCKWISE, percentage_speed);   
+            break;
+    }
+}

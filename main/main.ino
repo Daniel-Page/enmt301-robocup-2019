@@ -8,14 +8,11 @@
 #include "motors.h"
 #include "sensors.h"
 
+
 #define BAUD_RATE 9600 // Bits/s
 
-enum modes {SEARCHING, KNOCKOVER, PICKUP, BACKOFF, FINISHED}; // Implement later
 
-
-// Definitions for IR sensor
-int analogInPin = A0;  
-int sensorValue = 0;
+enum modes {SEARCHING, KNOCKOVER, PICKUP, BACKOFF, FINISHED}; // Implement states later
 
 
 void setup()
@@ -28,22 +25,16 @@ void setup()
     Serial.begin(BAUD_RATE); // Initialises serial
     
     initMotors();
-    setMotor(RIGHT, CLOCKWISE, 100);    // Sets the right motor to 100% speed clockwise
-    setMotor(LEFT, ANTICLOCKWISE, 100); // Sets the left motor to 100% speed anticlockwise
-    // setMotor(LEFT, STATIONARY, 0);   // Stops left motor
+    //setMotor(RIGHT, CLOCKWISE, 50);   // Sets the right motor to 100% speed clockwise
+    //setMotor(LEFT, CLOCKWISE, 50);    // Sets the left motor to 100% speed anticlockwise
+    turnRobot(CLOCKWISE,50);
+    // setMotor(LEFT, STATIONARY, 0); // Stops left motor
 }
 
 
 void loop() 
 { 
-    // Find the equation for calculating the distance based on the sensor ouput. Test ultrasonic sensor?
-    // Implement feedback control? PD or PID
-    // Implement state machine for robot modes
     
-    sensorValue = analogRead(analogInPin);
-    Serial.println(sensorValue);
-    delay(2); // 2 ms ADC settling time (500Hz)
-
-
-    wdt_reset(); // Reset watchdog timer
+    irSense();
+    wdt_reset(); // Resets watchdog timer
 }

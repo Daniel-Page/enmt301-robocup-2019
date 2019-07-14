@@ -6,7 +6,7 @@
 #define SENSORS_H_
 
 
-
+void irSense(void);
 
 
 #endif /* SENSORS_H_ */
