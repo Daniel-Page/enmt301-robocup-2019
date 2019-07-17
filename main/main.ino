@@ -18,10 +18,8 @@ int rightValue = 0;
 int leftSensor = A2; 
 int leftValue = 0;
 
-int left_blocked = 0;
-int right_blocked = 0;
-int blocked_left_count = 0;
-int blocked_right_count = 0;
+int blocked = 0;
+int blocked_count = 0;
 
 
 
@@ -63,7 +61,7 @@ void loop()
   }
 
 
-  if (block_count >= 100) {
+  if (blocked_count >= 100) {
       blocked = 0;
   } else {
       blocked_count++;
