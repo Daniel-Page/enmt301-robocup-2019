@@ -19,7 +19,6 @@ int leftSensor = A2;
 int leftValue = 0;
 
 int blocked = 0;
-int blocked_count = 0;
 
 
 
@@ -46,27 +45,26 @@ void loop()
   leftValue = analogRead(leftSensor);
   Serial.println(leftValue);
   delay(1); // delay in ms between reads for stability
-
+  
+  
+  // randomBit = rand() % 2;
 
   if (rightValue < 200 && leftValue < 200) { 
+      blocked = 0;   
       setMotor(RIGHT, CLOCKWISE, 75);  
       setMotor(LEFT, CLOCKWISE, 75);
   } else if (rightValue >= 200 && leftValue >= 200) {
-        blocked = 1;
-        turnRobot(ANTICLOCKWISE, 50); // Runs when both sensors are block for 100 counts
+          blocked = 1;
+         // Runs when both sensors are block for 100 counts
   } else if (rightValue >= 200 && !blocked) {
         turnRobot(ANTICLOCKWISE, 50);
   } else if (leftValue >= 200 && !blocked) {
         turnRobot(CLOCKWISE, 50);
+  } else if (blocked) {
+        turnRobot(ANTICLOCKWISE, 50);
   }
 
-
-  if (blocked_count >= 100) {
-      blocked = 0;
-  } else {
-      blocked_count++;
-  }
 
     
-    wdt_reset(); // Resets watchdog timer
+  wdt_reset(); // Resets watchdog timer
 }
