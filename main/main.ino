@@ -19,8 +19,7 @@ int leftSensor = A2;
 int leftValue = 0;
 
 int blocked = 0;
-
-
+int blink_rate = 0;
 
 enum modes {SEARCHING, KNOCKOVER, PICKUP, BACKOFF, FINISHED}; // Implement states later
 
@@ -30,7 +29,12 @@ void setup()
     pinMode(49, OUTPUT); // Pin 49 is used to enable IO power
     digitalWrite(49, 1); // Enable IO power on main CPU board
 
-    wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
+    // Setup led
+    pinMode(21, OUTPUT);
+    digitalWrite(21,0);
+    
+
+    //wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
 
     Serial.begin(BAUD_RATE); // Initialises serial
     
@@ -46,9 +50,15 @@ void loop()
   Serial.println(leftValue);
   delay(1); // delay in ms between reads for stability
   
+  digitalWrite(21, 1);
+  delay(blink_rate);
+  digitalWrite(21,0);
+  delay(blink_rate);
   
-  // randomBit = rand() % 2;
+  
 
+  // randomBit = rand() % 2;
+ 
   if (rightValue < 200 && leftValue < 200) { 
       blocked = 0;   
       setMotor(RIGHT, CLOCKWISE, 75);  
@@ -63,8 +73,8 @@ void loop()
   } else if (blocked) {
         turnRobot(ANTICLOCKWISE, 50);
   }
-
-
+  
+  blink_rate = 20000/rightValue;
     
-  wdt_reset(); // Resets watchdog timer
+  //wdt_reset(); // Resets watchdog timer
 }
