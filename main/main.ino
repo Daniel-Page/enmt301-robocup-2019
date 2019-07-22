@@ -6,6 +6,7 @@
 
 #include <avr/wdt.h>
 #include "motors.h"
+#include "speaker.h"
 
 
 #define BAUD_RATE 9600 // Bits/s
@@ -26,14 +27,13 @@ enum modes {SEARCHING, KNOCKOVER, PICKUP, BACKOFF, FINISHED}; // Implement state
 
 void setup()
 { 
-    pinMode(49, OUTPUT); // Pin 49 is used to enable IO power
-    digitalWrite(49, 1); // Enable IO power on main CPU board
+    //pinMode(49, OUTPUT); // Pin 49 is used to enable IO power
+    //digitalWrite(49, 1); // Enable IO power on main CPU board
 
     // Setup led
     pinMode(21, OUTPUT);
-    digitalWrite(21,0);
+    digitalWrite(21,LOW);
     
-
     //wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
 
     Serial.begin(BAUD_RATE); // Initialises serial
@@ -44,33 +44,36 @@ void setup()
 
 void loop() 
 { 
+  //midi(); // start playing song
+
+  
   rightValue = analogRead(rightSensor);
   Serial.println(rightValue);
   leftValue = analogRead(leftSensor);
   Serial.println(leftValue);
   delay(1); // delay in ms between reads for stability
   
-  digitalWrite(21, 1);
+  digitalWrite(21, HIGH);
   delay(blink_rate);
-  digitalWrite(21,0);
+  digitalWrite(21,LOW);
   delay(blink_rate);
   
   
 
   // randomBit = rand() % 2;
  
-  if (rightValue < 200 && leftValue < 200) { 
+  if (rightValue < 200 && leftValue < 200) { // When nothing blocks both sensors
       blocked = 0;   
       setMotor(RIGHT, CLOCKWISE, 75);  
       setMotor(LEFT, CLOCKWISE, 75);
-  } else if (rightValue >= 200 && leftValue >= 200) {
+  } else if (rightValue >= 200 && leftValue >= 200) { // When both sensors are blocked
           blocked = 1;
          // Runs when both sensors are block for 100 counts
-  } else if (rightValue >= 200 && !blocked) {
+  } else if (rightValue >= 200 && !blocked) { // When the right sensor is blocked
         turnRobot(ANTICLOCKWISE, 50);
-  } else if (leftValue >= 200 && !blocked) {
+  } else if (leftValue >= 200 && !blocked) { // When the left sensor is blocked
         turnRobot(CLOCKWISE, 50);
-  } else if (blocked) {
+  } else if (blocked) { // While both sensors are blocked
         turnRobot(ANTICLOCKWISE, 50);
   }
   
