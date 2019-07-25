@@ -11,11 +11,17 @@
 
 
 #include <Servo.h>
+#include <Arduino.h>
 #include "motors.h"
 
 
 #define LEFT_SERVO_PIN  2 // The pins can be switched for different orientations of the robot
 #define RIGHT_SERVO_PIN 3
+
+
+int stepper_motor_dir = 32;
+int stepper_motor_step = 33;
+int stepper_motor_count = 0;
 
 
 Servo myservoLeft, myservoRight; // Creates servo objects to control the left and right motors
@@ -26,6 +32,10 @@ void initMotors(void)
 {
     myservoLeft.attach(LEFT_SERVO_PIN);   // Attaches the servo pin 3 to the servo object
     myservoRight.attach(RIGHT_SERVO_PIN); // Attaches the servo pin 2 to the servo object  
+
+    // Setup steppermotor
+    pinMode(stepper_motor_dir,OUTPUT);
+    pinMode(stepper_motor_step,OUTPUT);
 }
 
 
@@ -84,6 +94,42 @@ void turnRobot(int turn_direction, float percentage_speed)
         case ANTICLOCKWISE:
             setMotor(RIGHT, CLOCKWISE, percentage_speed);   
             setMotor(LEFT, ANTICLOCKWISE, percentage_speed);   
+            break;
+    }
+}
+
+
+void stepper_revolutions(int revolutions, int motor_direction) 
+{
+    // 0.9 degrees/step
+    // 400 steps/revolution
+  
+    int steps = revolutions*400;
+
+    switch(motor_direction)
+    {
+        case CLOCKWISE:
+            
+            if (stepper_motor_count<=steps)           
+            {
+                digitalWrite(stepper_motor_dir,LOW); // Set direction
+                digitalWrite(stepper_motor_step,LOW);
+                delayMicroseconds(2);
+                digitalWrite(stepper_motor_step,HIGH);
+                //delay(1);
+                stepper_motor_count++;
+            }
+            break;
+        case ANTICLOCKWISE:
+            if (stepper_motor_count<=steps)
+            {
+                digitalWrite(stepper_motor_dir,LOW); // Set direction
+                digitalWrite(stepper_motor_step,LOW);
+                delayMicroseconds(2);
+                digitalWrite(stepper_motor_step,HIGH);
+                //delay(1);
+                stepper_motor_count++;
+            }
             break;
     }
 }

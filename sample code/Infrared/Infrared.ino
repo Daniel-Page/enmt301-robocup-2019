@@ -1,4 +1,4 @@
-int analogInPin = A0;  
+int analogInPin = A3;  
 int sensorValue = 0;
 
 
