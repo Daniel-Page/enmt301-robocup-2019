@@ -38,6 +38,7 @@ enum modes program_state = SEARCHING;
 
 void setup()
 { 
+    setup_sound();
     //pinMode(49, OUTPUT); // Pin 49 is used to enable IO power
     //digitalWrite(49, 1); // Enable IO power on main CPU board
 
@@ -142,7 +143,8 @@ void loop() // Assumed to be running at approximately 16MHz
         
         
     }
-    
-  
+
+
+test();  
     wdt_reset(); // Resets watchdog timer
 }
