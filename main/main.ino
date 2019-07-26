@@ -49,8 +49,6 @@ void setup()
     pinMode(electromagnet, OUTPUT);
     digitalWrite(electromagnet, LOW);
 
-    
-
     // Setup limit switches
     pinMode(limit_switch_left,INPUT);
     pinMode(limit_switch_right,INPUT);
@@ -131,13 +129,17 @@ void loop() // Assumed to be running at approximately 16MHz
         static int load_cell_timer_count = 0;
         if (load_cell_timer_count >= 3200000) // 200ms*16MHz // Effectively delay(200)
         {
-        Serial.print(scale.getGram(), 1);    // Get force and print answer
-        Serial.println(" g");
+            if (scale.getGram() > 1000) {
+                program_state = FINISHED;
+            }
+            Serial.print(scale.getGram(), 1);    // Get force and print answer
+            Serial.println(" g");
             load_cell_timer_count = 0;
         } else {
           load_cell_timer_count++;
         }
 
+        
         
     }
     
