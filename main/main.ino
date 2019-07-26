@@ -10,6 +10,8 @@
 #include "speaker.h"
 #include "sensors.h"
 #include "led.h"
+#include "Hx711.h"  //Include needed library of functions to talk to hx711 IC
+Hx711 scale(24, 25);  //Setup pins for digital communications with weight IC
 
 
 #define BAUD_RATE 9600 // Bits/s
@@ -46,7 +48,10 @@ void setup()
     // Setup Electromagnet
     pinMode(electromagnet, OUTPUT);
     digitalWrite(electromagnet, LOW);
+
     
+
+    // Setup limit switches
     pinMode(limit_switch_left,INPUT);
     pinMode(limit_switch_right,INPUT);
     
@@ -109,17 +114,31 @@ void loop() // Assumed to be running at approximately 16MHz
     }
 
     if (program_state == PICKUP) {
-        
+
+
+        // Stepper motor sequences and electromagnet activation
         static int arm;
-        
         if (arm = 0 && steps(10000,ANTICLOCKWISE) == 1) { // Lowers the arm to the level of the weight
             arm = 1;
             digitalWrite(electromagnet, HIGH);
         } 
-        
         if (arm == 1) {
             steps(9000,CLOCKWISE); // Raises the arm to almost the top
         }
+
+
+        // Load cell checked every 200ms
+        static int load_cell_timer_count = 0;
+        if (load_cell_timer_count >= 3200000) // 200ms*16MHz // Effectively delay(200)
+        {
+        Serial.print(scale.getGram(), 1);    // Get force and print answer
+        Serial.println(" g");
+            load_cell_timer_count = 0;
+        } else {
+          load_cell_timer_count++;
+        }
+
+        
     }
     
   
