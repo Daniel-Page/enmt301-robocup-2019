@@ -15,7 +15,7 @@ int tonePin = A0;
 // Ice Cream Man
 
 void midi(void) {
-     tone(tonePin, 440, 450.0);
+    tone(tonePin, 440, 450.0);
     delay(500.0);
     delay(500.0);
     tone(tonePin, 523, 450.0);

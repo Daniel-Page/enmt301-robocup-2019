@@ -99,36 +99,44 @@ void turnRobot(int turn_direction, float percentage_speed)
 }
 
 
-void stepper_revolutions(int revolutions, int motor_direction) 
+int steps(int steps, int motor_direction) 
 {
     // 0.9 degrees/step
     // 400 steps/revolution
   
-    int steps = revolutions*400;
+    static int stepper_motor_count = 0;
+    static int count_timer = 0;
 
     switch(motor_direction)
     {
         case CLOCKWISE:
-            
-            if (stepper_motor_count<=steps)           
+            if (stepper_motor_count <= steps && count_timer >= 16000) // Count timer: 1ms*16MHz = 16000 cycles           
             {
                 digitalWrite(stepper_motor_dir,LOW); // Set direction
                 digitalWrite(stepper_motor_step,LOW);
                 delayMicroseconds(2);
                 digitalWrite(stepper_motor_step,HIGH);
-                //delay(1);
                 stepper_motor_count++;
+                count_timer = 0;
+            } else if (stepper_motor_count > steps) {
+                return 1;
+            } else {
+                count_timer++;
             }
             break;
         case ANTICLOCKWISE:
-            if (stepper_motor_count<=steps)
+            if (stepper_motor_count <= steps && count_timer >= 16000) // Count timer: 1ms*16MHz = 16000 cycles
             {
                 digitalWrite(stepper_motor_dir,LOW); // Set direction
                 digitalWrite(stepper_motor_step,LOW);
                 delayMicroseconds(2);
                 digitalWrite(stepper_motor_step,HIGH);
-                //delay(1);
                 stepper_motor_count++;
+                count_timer = 0; 
+            } else if (stepper_motor_count > steps) {
+                return 1;
+            } else {
+                count_timer++;
             }
             break;
     }

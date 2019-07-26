@@ -19,7 +19,7 @@ void setMotor(int motor, int motor_direction, float percentage_power);
 void turnRobot(int turn_direction, float percentage_speed);
 
 
-void stepper_revolutions(int revolutions, int motor_direction);
+int steps(int steps, int motor_direction);
 
 
 #endif /* MOTORS_H_ */
