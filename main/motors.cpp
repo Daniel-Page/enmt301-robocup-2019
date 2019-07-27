@@ -22,7 +22,7 @@
 int stepper_motor_dir = 32;
 int stepper_motor_step = 33;
 int stepper_motor_count = 0;
-
+int step_state = 0;
 
 Servo myservoLeft, myservoRight; // Creates servo objects to control the left and right motors
 
@@ -99,18 +99,17 @@ void turnRobot(int turn_direction, float percentage_speed)
 }
 
 
-int steps(int steps, int motor_direction) 
+void steps(int steps, int motor_direction) 
 {
     // 0.9 degrees/step
     // 400 steps/revolution
-  
-    static int stepper_motor_count = 0;
+   
     static int count_timer = 0;
 
     switch(motor_direction)
     {
         case CLOCKWISE:
-            if (stepper_motor_count <= steps && count_timer >= 16000) // Count timer: 1ms*16MHz = 16000 cycles           
+            if (stepper_motor_count <= steps && count_timer >= 117) // Count timer: 1ms*16MHz = 16000 cycles           
             {
                 digitalWrite(stepper_motor_dir,LOW); // Set direction
                 digitalWrite(stepper_motor_step,LOW);
@@ -119,25 +118,44 @@ int steps(int steps, int motor_direction)
                 stepper_motor_count++;
                 count_timer = 0;
             } else if (stepper_motor_count > steps) {
-                return 1;
+                step_state++;
             } else {
                 count_timer++;
             }
             break;
         case ANTICLOCKWISE:
-            if (stepper_motor_count <= steps && count_timer >= 16000) // Count timer: 1ms*16MHz = 16000 cycles
+            if (stepper_motor_count <= steps && count_timer >= 117) // Count timer: 1ms*16MHz = 16000 cycles
             {
-                digitalWrite(stepper_motor_dir,LOW); // Set direction
-                digitalWrite(stepper_motor_step,LOW);
-                delayMicroseconds(2);
+                digitalWrite(stepper_motor_dir,HIGH); // Set direction
                 digitalWrite(stepper_motor_step,HIGH);
+                delayMicroseconds(2);
+                digitalWrite(stepper_motor_step,LOW);
                 stepper_motor_count++;
                 count_timer = 0; 
             } else if (stepper_motor_count > steps) {
-                return 1;
+                step_state++;
             } else {
                 count_timer++;
             }
             break;
     }
+}
+
+
+void stepper(void) {
+  if (step_state == 0) {
+      steps(10000,ANTICLOCKWISE);
+  } else if (step_state == 1) {
+      static int lock = 0;
+      if (lock == 0) {
+          stepper_motor_count = 0 ;
+          lock = 1;
+      }
+      steps(5000,CLOCKWISE); // Raises the arm to almost the top
+  }
+}
+
+
+int is_step_state(void) {
+    return step_state;
 }

@@ -6,13 +6,13 @@
 #define SPEAKER_H_
 
 
-void setup_sound();
+void setup_tune(void);
 
 
 void midi(void);
 
 
-void test(void);
+void play_tune(void);
 
 
 #endif /* SPEAKER_H_ */

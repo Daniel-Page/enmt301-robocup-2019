@@ -17,7 +17,7 @@ boolean enablePtreplaceMe594744 = true;
 
 static struct pt ptreplaceMe594744;
 
-void setup_sound() {
+void setup_tune(void) {
   PT_INIT(&ptreplaceMe594744);  // protothread variable
 }
 
@@ -104,6 +104,6 @@ static PT_THREAD(protothreadreplaceMe594744(struct pt *pt)) {
   PT_END(pt);
 }
 
-void test(void) {
+void play_tune(void) {
   protothreadreplaceMe594744(&ptreplaceMe594744); // schedule the protothread
 }

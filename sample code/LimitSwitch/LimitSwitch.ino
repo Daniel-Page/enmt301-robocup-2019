@@ -1,8 +1,8 @@
 /*
 Test out the limit switches on the IO extension board
 */
-int PinLimit01 = 30;
-int PinLimit02 = 31;
+int PinLimit01 = 27;
+int PinLimit02 = 28;
 int PinLimit03 = 32;
 int PinLimit04 = 33;
 

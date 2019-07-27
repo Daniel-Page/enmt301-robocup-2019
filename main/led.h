@@ -12,4 +12,7 @@ void initLed(void);
 void flash_led(float sensor_input);
 
 
+void green_led_on(void);
+
+
 #endif /* LED_H_ */
