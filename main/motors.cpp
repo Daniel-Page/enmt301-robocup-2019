@@ -127,9 +127,9 @@ void steps(int steps, int motor_direction)
             if (stepper_motor_count <= steps && count_timer >= 117) // Count timer: 1ms*16MHz = 16000 cycles
             {
                 digitalWrite(stepper_motor_dir,HIGH); // Set direction
-                digitalWrite(stepper_motor_step,HIGH);
-                delayMicroseconds(2);
                 digitalWrite(stepper_motor_step,LOW);
+                delayMicroseconds(2);
+                digitalWrite(stepper_motor_step,HIGH);
                 stepper_motor_count++;
                 count_timer = 0; 
             } else if (stepper_motor_count > steps) {
@@ -144,14 +144,14 @@ void steps(int steps, int motor_direction)
 
 void stepper(void) {
   if (step_state == 0) {
-      steps(10000,ANTICLOCKWISE);
+      steps(9500,ANTICLOCKWISE);
   } else if (step_state == 1) {
       static int lock = 0;
       if (lock == 0) {
           stepper_motor_count = 0 ;
           lock = 1;
       }
-      steps(5000,CLOCKWISE); // Raises the arm to almost the top
+      steps(8000,CLOCKWISE); // Raises the arm to almost the top
   }
 }
 

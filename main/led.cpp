@@ -27,7 +27,7 @@ void flash_led(float sensor_input)
     static long n = 0;
     static int led_state = LOW;
     // Max IR output assumed to be 1000 
-    if (n >= (1-sensor_input/300)*117)
+    if (n >= (1-sensor_input/200)*11700)
     {
         if (led_state == LOW) {
             led_state = HIGH;

@@ -5,11 +5,7 @@
 // Clock speed: 16MHz
 
 // To fix:
-// limit switch wiring -- loose so accidently trigger sometimes
 // load cell threshold -- can detect when a weight is attached but takes a few seconds
-// stepper motor and screw track needs to be tigher to lift weights
-// variable speed
-// reversing
 // reliability of stepper motor movement?
 
 
@@ -87,8 +83,16 @@ void loop() // Assumed to be running at approximately 16MHz
        
         if (rightValue < 200 && leftValue < 200) { // When nothing blocks both sensors
             blocked = 0;   
-            setMotor(RIGHT, CLOCKWISE, 75);  
-            setMotor(LEFT, CLOCKWISE, 75);
+            static int variable_speed_count = 0;
+            static int variable_speed = 40;
+            if (variable_speed_count >= 1500 && variable_speed <= 75) {
+                variable_speed++;
+                variable_speed_count = 0;
+            } else {
+                variable_speed_count++;
+            }
+            setMotor(RIGHT, CLOCKWISE, variable_speed);  
+            setMotor(LEFT, CLOCKWISE, variable_speed);
         } else if (rightValue >= 200 && leftValue >= 200) { // When both sensors are blocked
                 blocked = 1;
                 Serial.println(blocked);
@@ -99,7 +103,8 @@ void loop() // Assumed to be running at approximately 16MHz
         } else if (leftValue >= 200 && !blocked) { // When the left sensor is blocked
               turnRobot(CLOCKWISE, 50);
         } else if (blocked) { // While both sensors are blocked
-              turnRobot(ANTICLOCKWISE, 50);
+            setMotor(RIGHT, ANTICLOCKWISE, 40);   
+            setMotor(LEFT, ANTICLOCKWISE, 50);   
         }
 
         if (rightValue >= leftValue) {
@@ -111,9 +116,9 @@ void loop() // Assumed to be running at approximately 16MHz
         int left_switch = digitalRead(limit_switch_left);
         int right_switch = digitalRead(limit_switch_right);
         if (left_switch == 1 || right_switch == 1) {
-           // setMotor(RIGHT, STATIONARY, 0);  
-          //  setMotor(LEFT, STATIONARY, 0);
-          //  program_state = PICKUP;
+            setMotor(RIGHT, STATIONARY, 0);  
+            setMotor(LEFT, STATIONARY, 0);
+            program_state = PICKUP;
         }
        // Serial.print(limit_switch_left);
         //Serial.print(limit_switch_right);
@@ -131,9 +136,8 @@ void loop() // Assumed to be running at approximately 16MHz
             static int load_cell_timer_count = 0;
             if (load_cell_timer_count >= 23400) // 200ms*16MHz // Effectively delay(200)
             {
-                if (scale.getGram() < 500) {
+                if (scale.getGram() < 200) {
                     green_led_on();
-    
                }
                // Serial.print(scale.getGram(), 1);    // Get force and print answer
                 //Serial.println(" g");
