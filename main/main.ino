@@ -1,14 +1,19 @@
-// main.ino - A program that controls the behaviour of a robot to compete in the robocup competition.
-// Developed by Sasha Cox, Dervla Braem & Daniel Page
+/********************************************************************************
+  main.ino
+  
+  A program that controls the behaviour of a robot to compete in the
+  robocup competition.
+  
+  Developed by Sasha Cox, Dervla Braem & Daniel Page
 
-// Note the board has to be set to "Arduino Mega ADK" in Tools->Board in the Arduino program.
-// Clock speed: 16MHz
-
-// To fix:
-// load cell threshold -- can detect when a weight is attached but takes a few seconds
-// reliability of stepper motor movement?
+  Note the board has to be set to "Arduino Mega ADK" in Tools->Board in the Arduino program.
+  Clock speed: 16MHz
+ ******************************************************************************/
 
 
+//**********************************************************************************
+// Modules and libraries
+//**********************************************************************************
 #include <avr/wdt.h>
 #include "src/TaskScheduler/TaskScheduler.h"
 #include "motors.h"
@@ -16,29 +21,30 @@
 #include "sensors.h"
 #include "led.h"
 #include "src/Hx711/Hx711.h"  //Include needed library of functions to talk to hx711 IC
-Hx711 scale(44,45);  //Setup pins for digital communications with weight IC
 
 
-#define BAUD_RATE 9600 // Bits/s
+//**********************************************************************************
+// Definitions
+//**********************************************************************************
+#define BAUD_RATE          9600 // Bits/s
+#define rightSensor        A2
+#define leftSensor         A3
+#define electromagnet      A1
+#define limit_switch_left  27
+#define limit_switch_right 28
+#define LOAD_CELL_PIN_1    44
+#define LOAD_CELL_PIN_2    45
 
 
-// Definitions for IR sensor
-int rightSensor = A2; 
+//**********************************************************************************
+// Variables
+//**********************************************************************************
 int rightValue = 0;
-
-int leftSensor = A3; 
 int leftValue = 0;
-
 int blocked = 0;
-int blink_rate = 0;
-
-int electromagnet = A1;
-
-int limit_switch_left = 27;
-int limit_switch_right = 28;
-
 enum modes {SEARCHING, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
+Hx711 scale(LOAD_CELL_PIN_1,LOAD_CELL_PIN_2);  //Setup pins for digital communications with weight IC
 
 
 void setup()
