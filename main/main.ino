@@ -10,6 +10,7 @@
 
 
 #include <avr/wdt.h>
+#include "TaskScheduler.h"
 #include "motors.h"
 #include "speaker.h"
 #include "sensors.h"
