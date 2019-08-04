@@ -1,14 +1,16 @@
-/********************************************************************************
-  main.ino
-  
-  A program that controls the behaviour of a robot to compete in the
-  robocup competition.
-  
-  Developed by Sasha Cox, Dervla Braem & Daniel Page
+/***********************************************************************************
+main.ino
 
-  Note the board has to be set to "Arduino Mega ADK" in Tools->Board in the Arduino program.
-  Clock speed: 16MHz
- ******************************************************************************/
+A program that controls the behaviour of a robot to compete in the
+robocup competition.
+
+Developed by Sasha Cox, Dervla Braem & Daniel Page
+
+Note the board has to be set to "Arduino Mega ADK" in Tools->Board in the
+Arduino program.
+
+Clock speed: 16MHz
+************************************************************************************/
 
 
 //**********************************************************************************

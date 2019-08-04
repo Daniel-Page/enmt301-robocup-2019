@@ -1,5 +1,15 @@
-// speaker.h    
-// Developed by Sasha Cox, Dervla Braem & Daniel Page
+/***********************************************************************************
+Speaker.h
+
+Plays a song using a series of tones
+
+Developed by Sasha Cox, Dervla Braem & Daniel Page
+
+speaker.cpp is automatically generated but needs the three functions and the following:
+#include "src/protothreads/pt.h"
+#include "src/protothreads/timer.h"
+int tonePin = A0;
+************************************************************************************/
 
 
 #ifndef SPEAKER_H_

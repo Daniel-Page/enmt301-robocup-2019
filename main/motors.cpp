@@ -1,5 +1,9 @@
-// motors.cpp - Controls the motors of the robot.
-// Developed by Sasha Cox, Dervla Braem & Daniel Page
+/***********************************************************************************
+motors.cpp
+
+Controls the motors of the robot.
+
+Developed by Sasha Cox, Dervla Braem & Daniel Page
 
 // Sabretooth driver connected to 13V and the DIP switches set to:
 // 1 - Off
@@ -8,17 +12,26 @@
 // 4 - Off
 // 5 - On
 // 6 - Off
+************************************************************************************/
 
 
+//**********************************************************************************
+// Modules and libraries
+//**********************************************************************************
 #include <Servo.h>
 #include <Arduino.h>
 #include "motors.h"
 
 
+//**********************************************************************************
+// Definitions
+//**********************************************************************************
 #define LEFT_SERVO_PIN  2 // The pins can be switched for different orientations of the robot
 #define RIGHT_SERVO_PIN 3
 
-
+//**********************************************************************************
+// Definitions
+//**********************************************************************************
 int stepper_motor_dir = 32;
 int stepper_motor_step = 33;
 int stepper_motor_count = 0;

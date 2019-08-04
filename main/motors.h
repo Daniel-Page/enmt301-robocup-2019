@@ -1,5 +1,18 @@
-// motors.h    
-// Developed by Sasha Cox, Dervla Braem & Daniel Page
+/***********************************************************************************
+motors.h
+
+Controls the motors of the robot.
+
+Developed by Sasha Cox, Dervla Braem & Daniel Page
+
+// Sabretooth driver connected to 13V and the DIP switches set to:
+// 1 - Off
+// 2 - On
+// 3 - Off
+// 4 - Off
+// 5 - On
+// 6 - Off
+************************************************************************************/
 
 
 #ifndef MOTORS_H_

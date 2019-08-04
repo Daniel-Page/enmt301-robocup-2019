@@ -1,5 +1,8 @@
-// led.h    
-// Developed by Sasha Cox, Dervla Braem & Daniel Page
+/***********************************************************************************
+led.h
+  
+Developed by Sasha Cox, Dervla Braem & Daniel Page
+************************************************************************************/
 
 
 #ifndef LED_H_
