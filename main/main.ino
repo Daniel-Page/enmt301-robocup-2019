@@ -10,12 +10,12 @@
 
 
 #include <avr/wdt.h>
-#include "TaskScheduler.h"
+#include "src/TaskScheduler/TaskScheduler.h"
 #include "motors.h"
 #include "speaker.h"
 #include "sensors.h"
 #include "led.h"
-#include "Hx711.h"  //Include needed library of functions to talk to hx711 IC
+#include "src/Hx711/Hx711.h"  //Include needed library of functions to talk to hx711 IC
 Hx711 scale(44,45);  //Setup pins for digital communications with weight IC
 
 

@@ -8,8 +8,8 @@
 //
 // CC0
     
-#include "pt.h"   // include protothread library
-#include "timer.h"
+#include "src/protothreads/pt.h"   // include protothread library
+#include "src/protothreads/timer.h"
 #include <Arduino.h>
 // Set this to be the pin that your buzzer resides in. (Note that you can only have one buzzer actively using the PWM signal at a time).
 int tonePin = A0;
