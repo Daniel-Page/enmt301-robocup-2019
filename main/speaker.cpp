@@ -17,7 +17,7 @@ boolean enablePtreplaceMe594744 = true;
 
 static struct pt ptreplaceMe594744;
 
-void setup_tune(void) {
+void initTune(void) {
   PT_INIT(&ptreplaceMe594744);  // protothread variable
 }
 

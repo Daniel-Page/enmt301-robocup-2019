@@ -31,23 +31,16 @@ void initLed(void)
 }
 
 
-void flash_led(float sensor_input)
+void flash_led(void)
 {
-    static long n = 0;
     static int led_state = LOW;
-    // Max IR output assumed to be 1000 
-    if (n >= (1-sensor_input/200)*11700)
-    {
+
         if (led_state == LOW) {
             led_state = HIGH;
         } else if (led_state == HIGH) {
             led_state = LOW;
         }
         digitalWrite(blue_led,led_state); 
-        n = 0;
-    } else {
-        n++;
-    }
 }
 
 

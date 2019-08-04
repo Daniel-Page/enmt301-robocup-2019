@@ -12,7 +12,7 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 void initLed(void);
 
 
-void flash_led(float sensor_input);
+void flash_led(void);
 
 
 void green_led_on(void);

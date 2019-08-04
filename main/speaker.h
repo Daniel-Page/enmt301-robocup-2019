@@ -16,7 +16,7 @@ int tonePin = A0;
 #define SPEAKER_H_
 
 
-void setup_tune(void);
+void initTune(void);
 
 
 void midi(void);

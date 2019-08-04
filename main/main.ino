@@ -18,6 +18,7 @@ Clock speed: 16MHz
 //**********************************************************************************
 #include <avr/wdt.h>
 #include "src/TaskScheduler/TaskScheduler.h"
+#include "src/HerkulexServo/HerkulexServo.h"
 #include "motors.h"
 #include "speaker.h"
 #include "sensors.h"
@@ -31,14 +32,19 @@ Clock speed: 16MHz
 #define BAUD_RATE          9600 // Bits/s
 #define rightSensor        A2
 #define leftSensor         A3
+#define rightSensorBottom  A4
+#define leftSensorBottom   A5
 #define electromagnet      A1
 #define limit_switch_left  27
 #define limit_switch_right 28
 #define LOAD_CELL_PIN_1    44
 #define LOAD_CELL_PIN_2    45
 
-#define US_READ_TASK_PERIOD                400
-#define US_READ_TASK_NUM_EXECUTE           10
+#define US_READ_IR_TASK_PERIOD                10
+#define US_LED_TASK_PERIOD                    2000
+
+#define US_READ_IR_TASK_NUM_EXECUTE           -1
+#define US_LED_TASK_NUM_EXECUTE               -1
 
 
 //**********************************************************************************
@@ -46,38 +52,66 @@ Clock speed: 16MHz
 //**********************************************************************************
 int rightValue = 0;
 int leftValue = 0;
+int rightValueBottom = 0;
+int leftValueBottom = 0;
 int blocked = 0;
 enum modes {SEARCHING, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
 Hx711 scale(LOAD_CELL_PIN_1,LOAD_CELL_PIN_2); // Setup pins for digital communications with weight IC
-Task tInit_led(US_READ_TASK_PERIOD, US_READ_TASK_NUM_EXECUTE, &initLed);
+
+
+void obstructionCheck(void) {
+    if (leftValueBottom <= 300 && leftValue <=50) {
+        Serial.println(0);
+    } else if (leftValueBottom > 300 && leftValue <= 50) {
+        Serial.println(1);
+    }
+}
+
+
+void readIR(void) {
+    leftValue = analogRead(leftSensor);
+    rightValue = analogRead(rightSensor);
+    leftValueBottom = analogRead(leftSensorBottom);
+    rightValueBottom = analogRead(rightSensorBottom);
+      if (leftValueBottom <= 300 && leftValue <=50) {
+        Serial.println(0);
+    } else if (leftValueBottom > 300 && leftValue <= 50) {
+        Serial.println(1);
+    }
+}
+
+
+Task tReadIR(US_READ_IR_TASK_PERIOD, US_READ_IR_TASK_NUM_EXECUTE, &readIR);
+Task tFlashLed(US_LED_TASK_PERIOD, US_LED_TASK_NUM_EXECUTE, &flash_led);
+
 Scheduler taskManager;
 
 
-//**********************************************************************************
-// Task scheduler initialisation
-//**********************************************************************************
-void task_init() {  
-    // This is a class/library function. Initialise the task scheduler
-    taskManager.init();     
-   
-    // Add tasks to the scheduler
-    taskManager.addTask(tInit_led); // Reading ultrasonic 
-  
-    //enable the tasks
-    tInit_led.enable();
+void taskInit() {  
+  // This is a class/library function. Initialise the task scheduler
+  taskManager.init();     
+ 
+  // Add tasks to the scheduler
+  taskManager.addTask(tReadIR);   //reading ultrasonic 
+  taskManager.addTask(tFlashLed);
 
-    Serial.println("Tasks have been initialised \n");
+  //enable the tasks
+  tReadIR.enable();
+  tFlashLed.enable();
+
+
+ //Serial.println("Tasks have been initialised \n");
 }
+
 
 
 void setup()
 { 
-    setup_tune();
     //pinMode(49, OUTPUT); // Pin 49 is used to enable IO power
     //digitalWrite(49, 1); // Enable IO power on main CPU board
 
-    //wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
+    // wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
 
     Serial.begin(BAUD_RATE); // Initialises serial
 
@@ -88,100 +122,26 @@ void setup()
     // Setup limit switches
     pinMode(limit_switch_left,INPUT);
     pinMode(limit_switch_right,INPUT);
-    
+        
+    initTune();
     initLed();
     initMotors();
+    taskInit();
 }
 
 
-void loop() // Assumed to be running at approximately 16MHz
+void loop()
 { 
     if (program_state == SEARCHING) {
        
-        static int sensor_timer_count = 0;
-        if (sensor_timer_count >= 117) // 1ms*16MHz
-        {
-            rightValue = analogRead(rightSensor);
-            //Serial.println(rightValue);
-            leftValue = analogRead(leftSensor);
-            //Serial.println(leftValue);
-            sensor_timer_count = 0;
-        } else {
-          sensor_timer_count++;
-        }
-      
-        // randomBit = rand() % 2;
-       
-        if (rightValue < 200 && leftValue < 200) { // When nothing blocks both sensors
-            blocked = 0;   
-            static int variable_speed_count = 0;
-            static int variable_speed = 40;
-            if (variable_speed_count >= 1500 && variable_speed <= 75) {
-                variable_speed++;
-                variable_speed_count = 0;
-            } else {
-                variable_speed_count++;
-            }
-            setMotor(RIGHT, CLOCKWISE, variable_speed);  
-            setMotor(LEFT, CLOCKWISE, variable_speed);
-        } else if (rightValue >= 200 && leftValue >= 200) { // When both sensors are blocked
-                blocked = 1;
-                Serial.println(blocked);
-
-               // Runs when both sensors are block for 100 counts
-        } else if (rightValue >= 200 && !blocked) { // When the right sensor is blocked
-              turnRobot(ANTICLOCKWISE, 50);
-        } else if (leftValue >= 200 && !blocked) { // When the left sensor is blocked
-              turnRobot(CLOCKWISE, 50);
-        } else if (blocked) { // While both sensors are blocked
-            setMotor(RIGHT, ANTICLOCKWISE, 40);   
-            setMotor(LEFT, ANTICLOCKWISE, 50);   
-        }
-
-        if (rightValue >= leftValue) {
-        flash_led(rightValue); // Poll to flash at a rate based on the sensor input
-        } else {
-            flash_led(leftValue);
-        }
-
-        int left_switch = digitalRead(limit_switch_left);
-        int right_switch = digitalRead(limit_switch_right);
-        if (left_switch == 1 || right_switch == 1) {
-            setMotor(RIGHT, STATIONARY, 0);  
-            setMotor(LEFT, STATIONARY, 0);
-            program_state = PICKUP;
-        }
-       // Serial.print(limit_switch_left);
-        //Serial.print(limit_switch_right);
-        //Serial.print("\n");
-        
-    }
-
-    if (program_state == PICKUP) {
-        // Stepper motor sequences and electromagnet activation
-        stepper();
-        
-        
-        if (is_step_state() == 2) {
-            // Load cell checked every 200ms
-            static int load_cell_timer_count = 0;
-            if (load_cell_timer_count >= 23400) // 200ms*16MHz // Effectively delay(200)
-            {
-                if (scale.getGram() < 200) {
-                    green_led_on();
-               }
-               // Serial.print(scale.getGram(), 1);    // Get force and print answer
-                //Serial.println(" g");
-                load_cell_timer_count = 0;
-            } else {
-              load_cell_timer_count++;
-            }
-        }
-        
-        
-    }
+    taskManager.execute(); // Execute the scheduler
+    //Serial.print(rightValue);
+   // Serial.print(" ");
+    //Serial.println(leftValue);
+    //Serial.print(" ");
+    Serial.print(rightValueBottom);
+    Serial.print(" ");
+    Serial.println(rightValue);
     
-    play_tune();  
-    //wdt_reset(); // Resets watchdog timer
-    //taskManager.execute(); // Execute the scheduler
+    }
 }
