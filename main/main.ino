@@ -22,7 +22,7 @@ Clock speed: 16MHz
 #include "speaker.h"
 #include "sensors.h"
 #include "led.h"
-#include "src/Hx711/Hx711.h"  //Include needed library of functions to talk to hx711 IC
+#include "src/Hx711/Hx711.h" // Include needed library of functions to talk to hx711 IC
 
 
 //**********************************************************************************
@@ -37,6 +37,9 @@ Clock speed: 16MHz
 #define LOAD_CELL_PIN_1    44
 #define LOAD_CELL_PIN_2    45
 
+#define US_READ_TASK_PERIOD                400
+#define US_READ_TASK_NUM_EXECUTE           10
+
 
 //**********************************************************************************
 // Variables
@@ -46,7 +49,26 @@ int leftValue = 0;
 int blocked = 0;
 enum modes {SEARCHING, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
-Hx711 scale(LOAD_CELL_PIN_1,LOAD_CELL_PIN_2);  //Setup pins for digital communications with weight IC
+Hx711 scale(LOAD_CELL_PIN_1,LOAD_CELL_PIN_2); // Setup pins for digital communications with weight IC
+Task tInit_led(US_READ_TASK_PERIOD, US_READ_TASK_NUM_EXECUTE, &initLed);
+Scheduler taskManager;
+
+
+//**********************************************************************************
+// Task scheduler initialisation
+//**********************************************************************************
+void task_init() {  
+    // This is a class/library function. Initialise the task scheduler
+    taskManager.init();     
+   
+    // Add tasks to the scheduler
+    taskManager.addTask(tInit_led); // Reading ultrasonic 
+  
+    //enable the tasks
+    tInit_led.enable();
+
+    Serial.println("Tasks have been initialised \n");
+}
 
 
 void setup()
@@ -161,4 +183,5 @@ void loop() // Assumed to be running at approximately 16MHz
     
     play_tune();  
     //wdt_reset(); // Resets watchdog timer
+    //taskManager.execute(); // Execute the scheduler
 }
