@@ -19,10 +19,6 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 #define MOTORS_H_
 
 
-enum motor {LEFT, RIGHT};
-enum motor_direction {CLOCKWISE, ANTICLOCKWISE, STATIONARY};
-
-
 void initMotors(void);
 
 

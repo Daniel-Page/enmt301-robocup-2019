@@ -29,15 +29,17 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 #define LEFT_SERVO_PIN  2 // The pins can be switched for different orientations of the robot
 #define RIGHT_SERVO_PIN 3
 
+
 //**********************************************************************************
-// Definitions
+// Variables
 //**********************************************************************************
 int stepper_motor_dir = 32;
 int stepper_motor_step = 33;
 int stepper_motor_count = 0;
 int step_state = 0;
-
 Servo myservoLeft, myservoRight; // Creates servo objects to control the left and right motors
+enum motor {LEFT, RIGHT};
+enum motor_direction {CLOCKWISE, ANTICLOCKWISE, STATIONARY};
 
 
 // Initialises the pins for both of the DC motors
