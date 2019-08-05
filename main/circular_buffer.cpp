@@ -6,7 +6,7 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 
 
 #include <Arduino.h>
-#include "circularBuffer.h"
+#include "circular_buffer.h"
 
 
 int readings[numReadings];      // the readings from the analog input
@@ -33,5 +33,4 @@ int updateCircBuff(circBuffer *readings_obj, int value) {
   }
 
   return readings_obj->total / numReadings;
-  delay(1);        // delay in between reads for stability
 }

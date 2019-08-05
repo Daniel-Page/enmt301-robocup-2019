@@ -8,7 +8,7 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 #ifndef CIRCBUFFER_H_
 #define CIRCBUFFER_H_
 
-const int numReadings = 15;
+const int numReadings = 20;
 
 typedef struct circBuffer_s circBuffer;
 struct circBuffer_s {

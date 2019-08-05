@@ -24,7 +24,7 @@ Clock speed: 16MHz
 #include "sensors.h"
 #include "led.h"
 #include "src/Hx711/Hx711.h" // Include needed library of functions to talk to hx711 IC
-#include "circularBuffer.h"
+#include "circular_buffer.h"
 
 
 //**********************************************************************************
@@ -41,7 +41,7 @@ Clock speed: 16MHz
 #define LOAD_CELL_PIN_1    44
 #define LOAD_CELL_PIN_2    45
 
-#define US_READ_IR_TASK_PERIOD                10
+#define US_READ_IR_TASK_PERIOD                10 // in ms
 #define US_LED_TASK_PERIOD                    2000
 
 #define US_READ_IR_TASK_NUM_EXECUTE           -1
@@ -75,15 +75,8 @@ void obstructionCheck(void) {
 
 
 void readIR(void) {
-    leftValue = analogRead(leftSensor);
-    rightValue = analogRead(rightSensor);
-    leftValueBottom = analogRead(leftSensorBottom);
-    rightValueBottom = analogRead(rightSensorBottom);
-      if (leftValueBottom <= 300 && leftValue <=50) {
-        Serial.println(0);
-    } else if (leftValueBottom > 300 && leftValue <= 50) {
-        Serial.println(1);
-    }
+    
+
 }
 
 
@@ -143,13 +136,23 @@ void loop()
 { 
     if (program_state == SEARCHING) {
 
-    taskManager.execute(); // Execute the scheduler
+    //taskManager.execute(); // Execute the scheduler
     //Serial.print(rightValue);
-   // Serial.print(" ");
+    // Serial.print(" ");
     //Serial.println(leftValue);
     //Serial.print(" ");
-    Serial.print(updateCircBuff(&sensor1, rightValueBottom));
-    //Serial.print(" ");
+    leftValue = analogRead(leftSensor);
+    rightValue = analogRead(rightSensor);
+    leftValueBottom = analogRead(leftSensorBottom);
+    rightValueBottom = analogRead(rightSensorBottom);
+    
+    //Serial.println(leftValue);
+    Serial.print(updateCircBuff(&sensor1, leftValue));
+    Serial.print(" ");
+    Serial.println(leftValue);
+
+    delay(1);
+    
     //Serial.println(rightValue);
     
     }
