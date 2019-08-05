@@ -1,8 +1,0 @@
-{
-  "root": "./docs",
-  "plugins": ["theme-api", "include-codeblock"],
-  "styles": {
-    "website": "./assets/extra-styles.css",
-    "pdf": "./assets/extra-styles.css"
-  }
-}
