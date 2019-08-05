@@ -59,6 +59,10 @@ int blocked = 0;
 enum modes {SEARCHING, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
 Hx711 scale(LOAD_CELL_PIN_1,LOAD_CELL_PIN_2); // Setup pins for digital communications with weight IC
+circBuffer sensor1;
+circBuffer sensor2;
+circBuffer sensor3;
+circBuffer sensor4;
 
 
 void obstructionCheck(void) {
@@ -106,7 +110,6 @@ void taskInit() {
 }
 
 
-
 void setup()
 { 
     //pinMode(49, OUTPUT); // Pin 49 is used to enable IO power
@@ -123,7 +126,12 @@ void setup()
     // Setup limit switches
     pinMode(limit_switch_left,INPUT);
     pinMode(limit_switch_right,INPUT);
-        
+
+    initCircBuff(&sensor1);
+    initCircBuff(&sensor2);
+    initCircBuff(&sensor2);
+    initCircBuff(&sensor2);
+
     initTune();
     initLed();
     initMotors();
@@ -134,15 +142,15 @@ void setup()
 void loop()
 { 
     if (program_state == SEARCHING) {
-       
+
     taskManager.execute(); // Execute the scheduler
     //Serial.print(rightValue);
    // Serial.print(" ");
     //Serial.println(leftValue);
     //Serial.print(" ");
-    Serial.print(rightValueBottom);
-    Serial.print(" ");
-    Serial.println(rightValue);
+    Serial.print(updateCircBuff(&sensor1, rightValueBottom));
+    //Serial.print(" ");
+    //Serial.println(rightValue);
     
     }
 }
