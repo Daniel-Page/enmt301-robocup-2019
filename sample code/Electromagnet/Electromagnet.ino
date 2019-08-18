@@ -10,20 +10,25 @@
 // Pin 6  has the LED on Teensy++ 2.0
 // Pin 13 has the LED on Teensy 3.0
 // give it a name:
-int led = A1;
+int led = A0;
+int led1 = A2;
+
 
 
 // the setup routine runs once when you press reset:
 void setup() {         
          
   // initialize the digital pin as an output.
-  pinMode(led, OUTPUT);     
+  pinMode(led, OUTPUT);    
+    pinMode(led1, OUTPUT);     
+ 
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
   digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
 
+  digitalWrite(led1, HIGH);   // turn the LED on (HIGH is the voltage level)
 
           
 }

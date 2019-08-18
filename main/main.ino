@@ -22,7 +22,7 @@ Clock speed: 16MHz
 #include "speaker.h"
 #include "sensors.h"
 #include "led.h"
-#include "src/Hx711/Hx711.h" // Include needed library of functions to talk to hx711 IC
+#include "src/Hx711/Hx711.h" // Load cell library
 #include "circular_buffer.h"
 
 
