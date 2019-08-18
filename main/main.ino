@@ -18,7 +18,6 @@ Clock speed: 16MHz
 //**********************************************************************************
 #include <avr/wdt.h>
 #include "src/TaskScheduler/TaskScheduler.h"
-#include "src/Herkulex/Herkulex.h"
 #include "motors.h"
 #include "speaker.h"
 #include "sensors.h"
