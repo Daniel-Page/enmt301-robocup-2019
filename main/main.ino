@@ -10,6 +10,21 @@ Note the board has to be set to "Arduino Mega ADK" in Tools->Board in the
 Arduino program.
 
 Clock speed: 16MHz
+
+Naming covention diagram:
+
+       _*______*_
+      |   FRONT  |
+      |  o     o |
+      |  LEVEL 1 |
+ LEFT |__________| RIGHT
+      |  LEVEL 2 |
+      |          |
+      |___BACK___|
+           *
+o = stepper motors
+* = IR sensors
+ 
 ************************************************************************************/
 
 
@@ -29,35 +44,42 @@ Clock speed: 16MHz
 //**********************************************************************************
 // Definitions
 //**********************************************************************************
-#define BAUD_RATE          9600 // Bits/s
-#define rightSensor        A2
-#define leftSensor         A3
-#define rightSensorBottom  A4
-#define leftSensorBottom   A5
-#define electromagnet      A1
-#define limit_switch_left  27
-#define limit_switch_right 28
-#define LOAD_CELL_PIN_1    44
-#define LOAD_CELL_PIN_2    45
+#define BAUD_RATE                    9600 // Bits/s
+#define IR_SENSOR_LEFT_TOP_PIN       A6
+#define IR_SENSOR_RIGHT_TOP_PIN      A7
+#define IR_SENSOR_LEFT_BOTTOM_PIN    A4
+#define IR_SENSOR_RIGHT_BOTTOM_PIN   A5
+#define ELECTROMAGNET_LEFT           A0
+#define ELECTROMAGNET_RIGHT          A2
+#define LIMIT_SWITCH_LEFT            27 // Not in use
+#define LIMIT_SWITCH_RIGHT           28
+#define LOAD_CELL_LEFT_1_PIN         44
+#define LOAD_CELL_LEFT_1_PIN         45
+#define LOAD_CELL_RIGHT_2_PIN        46
+#define LOAD_CELL_RIGHT_2_PIN        47
+#define SERVO_FRONT_PIN              34
 
-#define US_READ_IR_TASK_PERIOD                10 // in ms
-#define US_LED_TASK_PERIOD                    2000
+#define US_READ_IR_TASK_PERIOD       10 // in ms
+#define US_LED_TASK_PERIOD           2000
 
-#define US_READ_IR_TASK_NUM_EXECUTE           -1
-#define US_LED_TASK_NUM_EXECUTE               -1
+#define US_READ_IR_TASK_NUM_EXECUTE  -1
+#define US_LED_TASK_NUM_EXECUTE      -1
 
 
 //**********************************************************************************
 // Variables
 //**********************************************************************************
-int rightValue = 0;
-int leftValue = 0;
-int rightValueBottom = 0;
-int leftValueBottom = 0;
+
+int IR_sensor_left_top = 0;
+int IR_sensor_right_top = 0;
+int IR_sensor_left_bottom = 0;
+int IR_sensor_right_bottom = 0;
 int blocked = 0;
 enum modes {SEARCHING, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
-Hx711 scale(LOAD_CELL_PIN_1,LOAD_CELL_PIN_2); // Setup pins for digital communications with weight IC
+Hx711 scale(LOAD_CELL_LEFT_1_PIN,LOAD_CELL_LEFT_1_PIN);   // Setup pins for digital communications with weight IC
+// Hx711 scale(LOAD_CELL_RIGHT_2_PIN,LOAD_CELL_RIGHT_2_PIN); // Setup pins for digital communications with weight IC
+
 circBuffer sensor1;
 circBuffer sensor2;
 circBuffer sensor3;
@@ -65,9 +87,9 @@ circBuffer sensor4;
 
 
 void obstructionCheck(void) {
-    if (leftValueBottom <= 300 && leftValue <=50) {
+    if (IR_sensor_left_bottom <= 300 && IR_sensor_left_top <= 50) {
         Serial.println(0);
-    } else if (leftValueBottom > 300 && leftValue <= 50) {
+    } else if (IR_sensor_left_bottom > 300 && IR_sensor_left_top <= 50) {
         Serial.println(1);
     }
 }
@@ -112,12 +134,19 @@ void setup()
     Serial.begin(BAUD_RATE); // Initialises serial
 
     // Setup Electromagnet
-    pinMode(electromagnet, OUTPUT);
-    digitalWrite(electromagnet, HIGH);
+    pinMode(ELECTROMAGNET_LEFT, OUTPUT);
+    pinMode(ELECTROMAGNET_RIGHT, OUTPUT);
+    digitalWrite(ELECTROMAGNET_LEFT, HIGH);
+    digitalWrite(ELECTROMAGNET_RIGHT, HIGH);
 
     // Setup limit switches
-    pinMode(limit_switch_left,INPUT);
-    pinMode(limit_switch_right,INPUT);
+    pinMode(LIMIT_SWITCH_LEFT, INPUT);
+    pinMode(LIMIT_SWITCH_RIGHT, INPUT);
+
+
+    pinMode(SERVO_FRONT_PIN, OUTPUT);
+
+
 
     initCircBuff(&sensor1);
     initCircBuff(&sensor2);
@@ -140,15 +169,15 @@ void loop()
     // Serial.print(" ");
     //Serial.println(leftValue);
     //Serial.print(" ");
-    leftValue = analogRead(leftSensor);
-    rightValue = analogRead(rightSensor);
-    leftValueBottom = analogRead(leftSensorBottom);
-    rightValueBottom = analogRead(rightSensorBottom);
+    IR_sensor_left_top = analogRead(IR_SENSOR_LEFT_TOP_PIN);
+    IR_sensor_right_top = analogRead(IR_SENSOR_RIGHT_TOP_PIN);
+    IR_sensor_left_bottom = analogRead(IR_SENSOR_LEFT_BOTTOM_PIN);
+    IR_sensor_right_bottom = analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN);
     
     //Serial.println(leftValue);
-    Serial.print(updateCircBuff(&sensor1, leftValue));
+    Serial.print(updateCircBuff(&sensor1, IR_SENSOR_LEFT_TOP_PIN));
     Serial.print(" ");
-    Serial.println(leftValue);
+    Serial.println(IR_SENSOR_LEFT_TOP_PIN);
 
     delay(1);
     
