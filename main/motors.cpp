@@ -152,10 +152,10 @@ void stepper_motor_step(int stepper_motor_side, int stepper_motor_direction, int
   switch(stepper_motor_side)
   {
       case LEFT:
-          stepper_motor_step(STEPPER_MOTOR_LEFT_DIR_PIN, STEPPER_MOTOR_LEFT_STEP_PIN, stepper_motor_direction);
+          stepper_motor_write(STEPPER_MOTOR_LEFT_DIR_PIN, STEPPER_MOTOR_LEFT_STEP_PIN, stepper_motor_direction);
       break;
       case RIGHT:
-          stepper_motor_step(STEPPER_MOTOR_RIGHT_DIR_PIN, STEPPER_MOTOR_RIGHT_STEP_PIN, stepper_motor_direction);
+          stepper_motor_write(STEPPER_MOTOR_RIGHT_DIR_PIN, STEPPER_MOTOR_RIGHT_STEP_PIN, stepper_motor_direction);
       break;
   }
 }

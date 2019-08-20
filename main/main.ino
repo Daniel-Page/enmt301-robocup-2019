@@ -61,7 +61,7 @@ o = stepper motors
 
 #define MS_READ_IR_TASK_PERIOD                10 // In ms. Also note 0 is the equivalent to the main loop
 #define MS_LED_TASK_PERIOD                    2000
-#define MS_STEPPER_MOTOR_TASK_PERIOD          2
+#define MS_STEPPER_MOTOR_TASK_PERIOD          1
 #define MS_STATE_CONTROLLER_TASK_PERIOD       100
 
 #define MS_READ_IR_TASK_NUM_EXECUTE           -1 // -1 means infinite
@@ -161,7 +161,7 @@ void read_IR_sensor(void) {
 
 void stepper_motor_task(void)
 {
-    stepper_motor_step(LEFT, CLOCKWISE, 2000);
+    stepper_motor_step(RIGHT, ANTICLOCKWISE, 2000);
 }
 
 
@@ -170,12 +170,46 @@ void state_controller_task(void)
     switch(program_state) 
     {
         case SEARCHING:
+            if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200) { // When nothing blocks both sensors
+            blocked = 0;   
+            static int variable_speed_count = 0;
+            static int variable_speed = 40;
+            if (variable_speed_count >= 1500 && variable_speed <= 75) {
+                variable_speed++;
+                variable_speed_count = 0;
+            } else {
+                variable_speed_count++;
+            }
+            setMotor(RIGHT, CLOCKWISE, variable_speed);  
+            setMotor(LEFT, CLOCKWISE, variable_speed);
+            } else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200) { // When both sensors are blocked
+                blocked = 1;
+                Serial.println(blocked);
 
-    
-        break;
+               // Runs when both sensors are block for 100 counts
+            } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right sensor is blocked
+                turnRobot(ANTICLOCKWISE, 50);
+            } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left sensor is blocked
+                turnRobot(CLOCKWISE, 50);
+            } else if (blocked) { // While both sensors are blocked
+                setMotor(RIGHT, ANTICLOCKWISE, 40);   
+                setMotor(LEFT, ANTICLOCKWISE, 50);   
+            }
+
+            if (IR_sensor_right_top >= IR_sensor_left_top) {
+            //flash_led(IR_sensor_right_top); // Poll to flash at a rate based on the sensor input
+            } else {
+            //flash_led(IR_sensor_left_top);
+            }
+            
+        case PICKUP:
+            // Stepper motor sequences and electromagnet activation
+            //stepper();
+            play_tune(); 
+            //wdt_reset(); // Resets watchdog timer
     }
 }
-
+     
 
 void loop()
 { 
