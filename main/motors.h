@@ -19,6 +19,11 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 #define MOTORS_H_
 
 
+// Global variables
+enum motor_direction {CLOCKWISE, ANTICLOCKWISE, STATIONARY};
+enum side {LEFT, RIGHT};
+
+
 void initMotors(void);
 
 
@@ -28,13 +33,10 @@ void setMotor(int motor, int motor_direction, float percentage_power);
 void turnRobot(int turn_direction, float percentage_speed);
 
 
-void steps(int steps, int motor_direction);
+void stepper_motor_write(int dir_pin, int step_pin, int motor_direction);
 
 
-void stepper(void);
-
-
-int is_step_state(void);
+void stepper_motor_step(int stepper_motor_side, int motor_direction, int steps);
 
 
 #endif /* MOTORS_H_ */

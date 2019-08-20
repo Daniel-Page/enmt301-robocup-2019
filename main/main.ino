@@ -32,7 +32,7 @@ o = stepper motors
 // Modules and libraries
 //**********************************************************************************
 #include <avr/wdt.h>
-#include "src/TaskScheduler/TaskScheduler.h"
+#include "src/TaskScheduler/TaskScheduler.h" // https://github.com/arkhipenko/TaskScheduler
 #include "motors.h"
 #include "speaker.h"
 #include "sensors.h"
@@ -44,32 +44,35 @@ o = stepper motors
 //**********************************************************************************
 // Definitions
 //**********************************************************************************
-#define BAUD_RATE                    9600 // Bits/s
-#define IR_SENSOR_LEFT_TOP_PIN       A6
-#define IR_SENSOR_RIGHT_TOP_PIN      A7
-#define IR_SENSOR_LEFT_BOTTOM_PIN    A4
-#define IR_SENSOR_RIGHT_BOTTOM_PIN   A5
-#define ELECTROMAGNET_LEFT           A0
-#define ELECTROMAGNET_RIGHT          A2
-#define LIMIT_SWITCH_LEFT            27 // Not in use
-#define LIMIT_SWITCH_RIGHT           28
-#define LOAD_CELL_LEFT_1_PIN         44
-#define LOAD_CELL_LEFT_1_PIN         45
-#define LOAD_CELL_RIGHT_2_PIN        46
-#define LOAD_CELL_RIGHT_2_PIN        47
-#define SERVO_FRONT_PIN              34
+#define BAUD_RATE                             9600 // Bits/s
+#define IR_SENSOR_LEFT_TOP_PIN                A6
+#define IR_SENSOR_RIGHT_TOP_PIN               A7
+#define IR_SENSOR_LEFT_BOTTOM_PIN             A4
+#define IR_SENSOR_RIGHT_BOTTOM_PIN            A5
+#define ELECTROMAGNET_LEFT                    A0
+#define ELECTROMAGNET_RIGHT                   A2
+#define LIMIT_SWITCH_LEFT                     27 // Not in use
+#define LIMIT_SWITCH_RIGHT                    28
+#define LOAD_CELL_LEFT_1_PIN                  44
+#define LOAD_CELL_LEFT_1_PIN                  45
+#define LOAD_CELL_RIGHT_2_PIN                 46
+#define LOAD_CELL_RIGHT_2_PIN                 47
+#define SERVO_FRONT_PIN                       34
 
-#define US_READ_IR_TASK_PERIOD       10 // in ms
-#define US_LED_TASK_PERIOD           2000
+#define MS_READ_IR_TASK_PERIOD                10 // In ms. Also note 0 is the equivalent to the main loop
+#define MS_LED_TASK_PERIOD                    2000
+#define MS_STEPPER_MOTOR_TASK_PERIOD          2
+#define MS_STATE_CONTROLLER_TASK_PERIOD       100
 
-#define US_READ_IR_TASK_NUM_EXECUTE  -1
-#define US_LED_TASK_NUM_EXECUTE      -1
+#define MS_READ_IR_TASK_NUM_EXECUTE           -1 // -1 means infinite
+#define MS_LED_TASK_NUM_EXECUTE               -1
+#define MS_STEPPER_MOTOR_TASK_NUM_EXECUTE     -1
+#define MS_STATE_CONTROLLER_TASK_NUM_EXECUTE  -1
 
 
 //**********************************************************************************
 // Variables
 //**********************************************************************************
-
 int IR_sensor_left_top = 0;
 int IR_sensor_right_top = 0;
 int IR_sensor_left_bottom = 0;
@@ -85,24 +88,14 @@ circBuffer sensor2;
 circBuffer sensor3;
 circBuffer sensor4;
 
+void read_IR_sensor(void);
+void stepper_motor_task(void);
+void state_controller_task(void);
 
-void obstructionCheck(void) {
-    if (IR_sensor_left_bottom <= 300 && IR_sensor_left_top <= 50) {
-        Serial.println(0);
-    } else if (IR_sensor_left_bottom > 300 && IR_sensor_left_top <= 50) {
-        Serial.println(1);
-    }
-}
+Task t_read_IR_sensor(MS_READ_IR_TASK_PERIOD, MS_READ_IR_TASK_NUM_EXECUTE, &read_IR_sensor);
+Task t_stepper_motor(MS_STEPPER_MOTOR_TASK_PERIOD, MS_STEPPER_MOTOR_TASK_NUM_EXECUTE, &stepper_motor_task);
+Task t_state_controller(MS_STATE_CONTROLLER_TASK_PERIOD, MS_STATE_CONTROLLER_TASK_NUM_EXECUTE, &state_controller_task);
 
-
-void readIR(void) {
-    
-
-}
-
-
-Task tReadIR(US_READ_IR_TASK_PERIOD, US_READ_IR_TASK_NUM_EXECUTE, &readIR);
-Task tFlashLed(US_LED_TASK_PERIOD, US_LED_TASK_NUM_EXECUTE, &flash_led);
 
 Scheduler taskManager;
 
@@ -112,13 +105,14 @@ void taskInit() {
   taskManager.init();     
  
   // Add tasks to the scheduler
-  taskManager.addTask(tReadIR);   //reading ultrasonic 
-  taskManager.addTask(tFlashLed);
+  taskManager.addTask(t_read_IR_sensor);   //reading ultrasonic 
+  taskManager.addTask(t_stepper_motor);
+  taskManager.addTask(t_state_controller);
 
-  //enable the tasks
-  tReadIR.enable();
-  tFlashLed.enable();
-
+  // Enable the tasks
+  t_read_IR_sensor.enable();
+  t_stepper_motor.enable();
+  t_state_controller.enable();
 
  //Serial.println("Tasks have been initialised \n");
 }
@@ -143,10 +137,7 @@ void setup()
     pinMode(LIMIT_SWITCH_LEFT, INPUT);
     pinMode(LIMIT_SWITCH_RIGHT, INPUT);
 
-
     pinMode(SERVO_FRONT_PIN, OUTPUT);
-
-
 
     initCircBuff(&sensor1);
     initCircBuff(&sensor2);
@@ -160,28 +151,33 @@ void setup()
 }
 
 
-void loop()
-{ 
-    if (program_state == SEARCHING) {
-
-    //taskManager.execute(); // Execute the scheduler
-    //Serial.print(rightValue);
-    // Serial.print(" ");
-    //Serial.println(leftValue);
-    //Serial.print(" ");
+void read_IR_sensor(void) {
     IR_sensor_left_top = analogRead(IR_SENSOR_LEFT_TOP_PIN);
     IR_sensor_right_top = analogRead(IR_SENSOR_RIGHT_TOP_PIN);
     IR_sensor_left_bottom = analogRead(IR_SENSOR_LEFT_BOTTOM_PIN);
     IR_sensor_right_bottom = analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN);
-    
-    //Serial.println(leftValue);
-    Serial.print(updateCircBuff(&sensor1, IR_SENSOR_LEFT_TOP_PIN));
-    Serial.print(" ");
-    Serial.println(IR_SENSOR_LEFT_TOP_PIN);
+}
 
-    delay(1);
+
+void stepper_motor_task(void)
+{
+    stepper_motor_step(LEFT, CLOCKWISE, 2000);
+}
+
+
+void state_controller_task(void) 
+{
+    switch(program_state) 
+    {
+        case SEARCHING:
+
     
-    //Serial.println(rightValue);
-    
+        break;
     }
+}
+
+
+void loop()
+{ 
+    taskManager.execute(); // Execute the scheduler
 }

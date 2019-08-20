@@ -37,14 +37,9 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 //**********************************************************************************
 // Variables
 //**********************************************************************************
-int stepper_motor_dir = 32;
-int stepper_motor_step = 33;
 int stepper_motor_count = 0;
 int step_state = 0;
 Servo myservoLeft, myservoRight; // Creates servo objects to control the left and right motors
-enum motor {LEFT, RIGHT};
-enum motor_direction {CLOCKWISE, ANTICLOCKWISE, STATIONARY};
-
 
 // Initialises the pins for both of the DC motors
 void initMotors(void)
@@ -52,9 +47,11 @@ void initMotors(void)
     myservoLeft.attach(SERVO_LEFT_PIN);   // Attaches the servo pin 3 to the servo object
     myservoRight.attach(SERVO_RIGHT_PIN); // Attaches the servo pin 2 to the servo object  
 
-    // Setup steppermotor
-    pinMode(stepper_motor_dir,OUTPUT);
-    pinMode(stepper_motor_step,OUTPUT);
+    // Setup steppermotors
+    pinMode(STEPPER_MOTOR_LEFT_DIR_PIN, OUTPUT);
+    pinMode(STEPPER_MOTOR_LEFT_STEP_PIN, OUTPUT);
+    pinMode(STEPPER_MOTOR_RIGHT_DIR_PIN, OUTPUT);
+    pinMode(STEPPER_MOTOR_RIGHT_STEP_PIN, OUTPUT);
 }
 
 
@@ -118,63 +115,47 @@ void turnRobot(int turn_direction, float percentage_speed)
 }
 
 
-void steps(int steps, int motor_direction) 
+void stepper_motor_write(int dir_pin, int step_pin, int motor_direction) 
 {
     // 0.9 degrees/step
     // 400 steps/revolution
-   
-    static int count_timer = 0;
 
-    switch(motor_direction)
-    {
-        case CLOCKWISE:
-            if (stepper_motor_count <= steps && count_timer >= 117) // Count timer: 1ms*16MHz = 16000 cycles           
-            {
-                digitalWrite(stepper_motor_dir,LOW); // Set direction
-                digitalWrite(stepper_motor_step,LOW);
-                delayMicroseconds(2);
-                digitalWrite(stepper_motor_step,HIGH);
-                stepper_motor_count++;
-                count_timer = 0;
-            } else if (stepper_motor_count > steps) {
-                step_state++;
-            } else {
-                count_timer++;
-            }
-            break;
-        case ANTICLOCKWISE:
-            if (stepper_motor_count <= steps && count_timer >= 117) // Count timer: 1ms*16MHz = 16000 cycles
-            {
-                digitalWrite(stepper_motor_dir,HIGH); // Set direction
-                digitalWrite(stepper_motor_step,LOW);
-                delayMicroseconds(2);
-                digitalWrite(stepper_motor_step,HIGH);
-                stepper_motor_count++;
-                count_timer = 0; 
-            } else if (stepper_motor_count > steps) {
-                step_state++;
-            } else {
-                count_timer++;
-            }
-            break;
+    static int stage = 1;
+    static int previous_direction;
+
+    if (motor_direction != previous_direction) {
+      stage = 1;
     }
+
+    if ((motor_direction == CLOCKWISE && stage == 1))
+    {
+        digitalWrite(dir_pin, LOW); // Set direction
+        digitalWrite(step_pin, LOW);
+        stage = 2;
+    } else if (motor_direction == CLOCKWISE && stage == 2) {
+        digitalWrite(step_pin, HIGH);
+        stage = 1;
+    } else if (motor_direction == ANTICLOCKWISE && stage == 1) {
+        digitalWrite(dir_pin, HIGH); // Set direction
+        digitalWrite(step_pin, LOW);
+        stage = 2;
+    } else if (motor_direction == ANTICLOCKWISE && stage == 2) {
+        digitalWrite(step_pin, HIGH);
+        stage = 1;
+    }
+    previous_direction = motor_direction;
 }
 
 
-void stepper(void) {
-  if (step_state == 0) {
-      steps(9500,ANTICLOCKWISE);
-  } else if (step_state == 1) {
-      static int lock = 0;
-      if (lock == 0) {
-          stepper_motor_count = 0 ;
-          lock = 1;
-      }
-      steps(8000,CLOCKWISE); // Raises the arm to almost the top
+void stepper_motor_step(int stepper_motor_side, int stepper_motor_direction, int steps) 
+{
+  switch(stepper_motor_side)
+  {
+      case LEFT:
+          stepper_motor_step(STEPPER_MOTOR_LEFT_DIR_PIN, STEPPER_MOTOR_LEFT_STEP_PIN, stepper_motor_direction);
+      break;
+      case RIGHT:
+          stepper_motor_step(STEPPER_MOTOR_RIGHT_DIR_PIN, STEPPER_MOTOR_RIGHT_STEP_PIN, stepper_motor_direction);
+      break;
   }
-}
-
-
-int is_step_state(void) {
-    return step_state;
 }
