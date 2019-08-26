@@ -27,6 +27,8 @@ o = stepper motors
  
 ************************************************************************************/
 
+int time1;
+
 
 //**********************************************************************************
 // Modules and libraries
@@ -49,25 +51,32 @@ o = stepper motors
 #define IR_SENSOR_RIGHT_TOP_PIN               A7
 #define IR_SENSOR_LEFT_BOTTOM_PIN             A4
 #define IR_SENSOR_RIGHT_BOTTOM_PIN            A5
-#define ELECTROMAGNET_LEFT                    A0
-#define ELECTROMAGNET_RIGHT                   A2
-#define LIMIT_SWITCH_LEFT                     27 // Not in use
-#define LIMIT_SWITCH_RIGHT                    28
+#define ELECTROMAGNET_LEFT_PIN                A0
+#define ELECTROMAGNET_RIGHT_PIN               A2
 #define LOAD_CELL_LEFT_1_PIN                  44
-#define LOAD_CELL_LEFT_1_PIN                  45
-#define LOAD_CELL_RIGHT_2_PIN                 46
+#define LOAD_CELL_LEFT_2_PIN                  45
+#define LOAD_CELL_RIGHT_1_PIN                 46
 #define LOAD_CELL_RIGHT_2_PIN                 47
 #define SERVO_FRONT_PIN                       34
+#define INDUCTIVE_PROX_SENSOR_LEFT_HORIZ_PIN  38
+#define INDUCTIVE_PROX_SENSOR_LEFT_VERT_PIN   39
+#define INDUCTIVE_PROX_SENSOR_RIGHT_HORIZ_PIN 38
+#define INDUCTIVE_PROX_SENSOR_RIGHT_VERT_PIN  39
+#define PROX_SENSOR_LEFT_PIN                  38
+#define PROX_SENSOR_RIGHT_PIN                 39
 
-#define MS_READ_IR_TASK_PERIOD                10 // In ms. Also note 0 is the equivalent to the main loop
+// Task scheduler tasks
+#define MS_READ_IR_TASK_PERIOD                2 // In ms. Also note 0 is the equivalent to the main loop
 #define MS_LED_TASK_PERIOD                    2000
 #define MS_STEPPER_MOTOR_TASK_PERIOD          1
-#define MS_STATE_CONTROLLER_TASK_PERIOD       100
+#define MS_STATE_CONTROLLER_TASK_PERIOD       2
+#define MS_READ_PROXIMITY_TASK_PERIOD         2
 
-#define MS_READ_IR_TASK_NUM_EXECUTE           -1 // -1 means infinite
-#define MS_LED_TASK_NUM_EXECUTE               -1
-#define MS_STEPPER_MOTOR_TASK_NUM_EXECUTE     -1
-#define MS_STATE_CONTROLLER_TASK_NUM_EXECUTE  -1
+#define MS_READ_IR_TASK_NUM_EXECUTE          -1 // -1 means infinite
+#define MS_LED_TASK_NUM_EXECUTE              -1
+#define MS_STEPPER_MOTOR_TASK_NUM_EXECUTE    -1
+#define MS_STATE_CONTROLLER_TASK_NUM_EXECUTE -1
+#define MS_READ_PROXIMITY_NUM_EXECUTE        -1
 
 
 //**********************************************************************************
@@ -77,6 +86,14 @@ int IR_sensor_left_top = 0;
 int IR_sensor_right_top = 0;
 int IR_sensor_left_bottom = 0;
 int IR_sensor_right_bottom = 0;
+
+int inductive_prox_sensor_left_horiz = 0;
+int inductive_prox_sensor_left_vert = 0;
+int inductive_prox_sensor_right_horiz = 0;
+int inductive_prox_sensor_right_vert = 0;
+int prox_sensor_left = 0;
+int prox_sensor_right = 0;
+
 int blocked = 0;
 enum modes {SEARCHING, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
@@ -88,13 +105,18 @@ circBuffer sensor2;
 circBuffer sensor3;
 circBuffer sensor4;
 
-void read_IR_sensor(void);
+
+void read_IR_sensors(void);
 void stepper_motor_task(void);
 void state_controller_task(void);
+void state_controller_task(void);
+void read_proximity_sensors(void);
 
-Task t_read_IR_sensor(MS_READ_IR_TASK_PERIOD, MS_READ_IR_TASK_NUM_EXECUTE, &read_IR_sensor);
+
+Task t_read_IR_sensors(MS_READ_IR_TASK_PERIOD, MS_READ_IR_TASK_NUM_EXECUTE, &read_IR_sensors);
 Task t_stepper_motor(MS_STEPPER_MOTOR_TASK_PERIOD, MS_STEPPER_MOTOR_TASK_NUM_EXECUTE, &stepper_motor_task);
 Task t_state_controller(MS_STATE_CONTROLLER_TASK_PERIOD, MS_STATE_CONTROLLER_TASK_NUM_EXECUTE, &state_controller_task);
+Task t_read_proximity_sensors(MS_READ_PROXIMITY_TASK_PERIOD, MS_READ_PROXIMITY_NUM_EXECUTE, &read_proximity_sensors);
 
 
 Scheduler taskManager;
@@ -105,14 +127,16 @@ void taskInit() {
   taskManager.init();     
  
   // Add tasks to the scheduler
-  taskManager.addTask(t_read_IR_sensor);   //reading ultrasonic 
+  taskManager.addTask(t_read_IR_sensors);
   taskManager.addTask(t_stepper_motor);
   taskManager.addTask(t_state_controller);
+  taskManager.addTask(t_read_proximity_sensors);
 
   // Enable the tasks
-  t_read_IR_sensor.enable();
+  t_read_IR_sensors.enable();
   t_stepper_motor.enable();
   t_state_controller.enable();
+  t_read_proximity_sensors.enable();
 
  //Serial.println("Tasks have been initialised \n");
 }
@@ -128,16 +152,20 @@ void setup()
     Serial.begin(BAUD_RATE); // Initialises serial
 
     // Setup Electromagnet
-    pinMode(ELECTROMAGNET_LEFT, OUTPUT);
-    pinMode(ELECTROMAGNET_RIGHT, OUTPUT);
-    digitalWrite(ELECTROMAGNET_LEFT, HIGH);
-    digitalWrite(ELECTROMAGNET_RIGHT, HIGH);
-
-    // Setup limit switches
-    pinMode(LIMIT_SWITCH_LEFT, INPUT);
-    pinMode(LIMIT_SWITCH_RIGHT, INPUT);
+    pinMode(ELECTROMAGNET_LEFT_PIN, OUTPUT);
+    pinMode(ELECTROMAGNET_RIGHT_PIN, OUTPUT);
+    digitalWrite(ELECTROMAGNET_LEFT_PIN, HIGH);
+    digitalWrite(ELECTROMAGNET_RIGHT_PIN, HIGH);
 
     pinMode(SERVO_FRONT_PIN, OUTPUT);
+
+    // Proximity sensors
+    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_HORIZ_PIN, INPUT);
+    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_VERT_PIN, INPUT);  
+    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_HORIZ_PIN, INPUT);  
+    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_VERT_PIN, INPUT);  
+    pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
+    pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);  
 
     initCircBuff(&sensor1);
     initCircBuff(&sensor2);
@@ -151,11 +179,24 @@ void setup()
 }
 
 
-void read_IR_sensor(void) {
+void read_IR_sensors(void) {
+    time1 = millis();
+    Serial.print(time1);
+    Serial.print("\n");
     IR_sensor_left_top = analogRead(IR_SENSOR_LEFT_TOP_PIN);
     IR_sensor_right_top = analogRead(IR_SENSOR_RIGHT_TOP_PIN);
     IR_sensor_left_bottom = analogRead(IR_SENSOR_LEFT_BOTTOM_PIN);
     IR_sensor_right_bottom = analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN);
+}
+
+
+void read_proximity_sensors(void) {
+    inductive_prox_sensor_left_horiz = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_HORIZ_PIN);
+    inductive_prox_sensor_left_vert = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_VERT_PIN);
+    inductive_prox_sensor_right_horiz = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_HORIZ_PIN);
+    inductive_prox_sensor_right_vert = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_VERT_PIN);
+    prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
+    prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
 }
 
 
@@ -184,7 +225,7 @@ void state_controller_task(void)
             setMotor(LEFT, CLOCKWISE, variable_speed);
             } else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200) { // When both sensors are blocked
                 blocked = 1;
-                Serial.println(blocked);
+                //Serial.println(blocked);
 
                // Runs when both sensors are block for 100 counts
             } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right sensor is blocked
