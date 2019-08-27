@@ -8,7 +8,6 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 speaker.cpp is automatically generated but needs the three functions and the following:
 #include "src/protothreads/pt.h"
 #include "src/protothreads/timer.h"
-int tonePin = A0;
 ************************************************************************************/
 
 

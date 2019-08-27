@@ -27,8 +27,6 @@ o = stepper motors
  
 ************************************************************************************/
 
-int time1;
-
 
 //**********************************************************************************
 // Modules and libraries
@@ -169,8 +167,8 @@ void setup()
 
     initCircBuff(&sensor1);
     initCircBuff(&sensor2);
-    initCircBuff(&sensor2);
-    initCircBuff(&sensor2);
+    initCircBuff(&sensor3);
+    initCircBuff(&sensor4);
 
     initTune();
     initLed();
@@ -180,9 +178,6 @@ void setup()
 
 
 void read_IR_sensors(void) {
-    time1 = millis();
-    Serial.print(time1);
-    Serial.print("\n");
     IR_sensor_left_top = analogRead(IR_SENSOR_LEFT_TOP_PIN);
     IR_sensor_right_top = analogRead(IR_SENSOR_RIGHT_TOP_PIN);
     IR_sensor_left_bottom = analogRead(IR_SENSOR_LEFT_BOTTOM_PIN);
