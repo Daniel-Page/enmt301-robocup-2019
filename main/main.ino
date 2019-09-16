@@ -24,7 +24,7 @@ Naming covention diagram:
            *
 o = stepper motors
 * = IR sensors
- 
+
 ************************************************************************************/
 
 
@@ -93,7 +93,7 @@ int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
 int blocked = 0;
-enum modes {SEARCHING, PICKUP, FINISHED};
+enum modes {SEARCHING,GOTO, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
 Hx711 scale(LOAD_CELL_LEFT_1_PIN,LOAD_CELL_LEFT_1_PIN);   // Setup pins for digital communications with weight IC
 // Hx711 scale(LOAD_CELL_RIGHT_2_PIN,LOAD_CELL_RIGHT_2_PIN); // Setup pins for digital communications with weight IC
