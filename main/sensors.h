@@ -9,6 +9,4 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 #define SENSORS_H_
 
 
-
-
 #endif /* SENSORS_H_ */

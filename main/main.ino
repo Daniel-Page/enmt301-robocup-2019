@@ -194,50 +194,20 @@ void read_proximity_sensors(void) {
     prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
 
     if (inductive_prox_sensor_left == 1) {
+        //##Stop robot##
+        setMotor(LEFT, STATIONARY, 0);
+        setMotor(RIGHT, STATIONARY, 0);
         //##Change to pickup state##
         program_state = PICKUP_LEFT;
-        //##Stop robot##
-        //##Start lowering the arm with the stepper motor (anticlockwise)##
-        //##Limit switch is activated##
-        if (limit_switch_left == 1) {
-            // State change
-        }
-
-
-        
-        //##Start raising the arm with the stepper motor (clockwise)##
-          //##Optional load cell check##
-          //##Actuate moving guide##
-        //##Change to searching state##
     }
     
     if (inductive_prox_sensor_right == 1) {
+        //##Stop robot##
+        setMotor(LEFT, STATIONARY, 0);
+        setMotor(RIGHT, STATIONARY, 0);
         //##Change to pickup state##
         program_state = PICKUP_RIGHT;
-
-
-
-        
-        //##Stop robot##
-        
-        //##Start lowering the arm with the stepper motor (anticlockwise)##
-        //##Limit switch is activated##
-        if (limit_switch_right == 1) {
-            // State change
-        }
-        
-        //##Start raising the arm with the stepper motor (clockwise)##
-          //##Optional load cell check##
-          //##Actuate moving guide##
-        //##Change to searching state## 
     }
-
-
-
-
-    
-
-    
 }
 
 
@@ -285,6 +255,14 @@ void state_controller_task(void)
             }
             
         case PICKUP_LEFT:
+            if (limit_switch_left == 1) {
+                // State change
+            }
+            //##Start lowering the arm with the stepper motor (anticlockwise)##
+            //##Start raising the arm with the stepper motor (clockwise)##
+            //##Optional load cell check##
+            //##Actuate moving guide##
+            //##Change to searching state##
             // Stepper motor sequences and electromagnet activation
             //stepper();
             play_tune(); 
@@ -295,6 +273,15 @@ void state_controller_task(void)
             //stepper();
             play_tune(); 
             //wdt_reset(); // Resets watchdog timer
+            //##Start raising the arm with the stepper motor (clockwise)##
+            //##Optional load cell check##
+            //##Actuate moving guide##
+            //##Change to searching state##
+            //##Start lowering the arm with the stepper motor (anticlockwise)##
+            //##Limit switch is activated##
+            if (limit_switch_right == 1) {
+            // State change
+        }
     }
 }
      
