@@ -46,11 +46,11 @@ o = stepper motors
 //**********************************************************************************
 #define BAUD_RATE                             9600 // Bits/s
 #define IR_SENSOR_LEFT_TOP_PIN                A6
-#define IR_SENSOR_RIGHT_TOP_PIN               A7
-#define IR_SENSOR_LEFT_BOTTOM_PIN             A4
-#define IR_SENSOR_RIGHT_BOTTOM_PIN            A5
-#define ELECTROMAGNET_LEFT_PIN                A0
-#define ELECTROMAGNET_RIGHT_PIN               A2
+#define IR_SENSOR_RIGHT_TOP_PIN               A10
+#define IR_SENSOR_MIDDLE_TOP_PIN              A8
+#define IR_SENSOR_REAR_PIN                    A4
+#define IR_SENSOR_LEFT_BOTTOM_PIN             A2
+#define IR_SENSOR_RIGHT_BOTTOM_PIN            A0
 #define LOAD_CELL_LEFT_1_PIN                  44
 #define LOAD_CELL_LEFT_2_PIN                  45
 #define LOAD_CELL_RIGHT_1_PIN                 46
@@ -82,6 +82,8 @@ o = stepper motors
 //**********************************************************************************
 int IR_sensor_left_top = 0;
 int IR_sensor_right_top = 0;
+int IR_sensor_middle_top = 0;
+int IR_sensor_rear = 0;
 int IR_sensor_left_bottom = 0;
 int IR_sensor_right_bottom = 0;
 
@@ -132,7 +134,7 @@ void taskInit() {
 
   // Enable the tasks
   t_read_IR_sensors.enable();
-  t_stepper_motor.enable();
+  //t_stepper_motor.enable();
   t_state_controller.enable();
   t_read_proximity_sensors.enable(); // ##########################
 
@@ -148,12 +150,6 @@ void setup()
     // wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
 
     Serial.begin(BAUD_RATE); // Initialises serial
-
-    // Setup Electromagnet
-    pinMode(ELECTROMAGNET_LEFT_PIN, OUTPUT);
-    pinMode(ELECTROMAGNET_RIGHT_PIN, OUTPUT);
-    digitalWrite(ELECTROMAGNET_LEFT_PIN, HIGH);
-    digitalWrite(ELECTROMAGNET_RIGHT_PIN, HIGH);
 
     pinMode(SERVO_FRONT_PIN, OUTPUT);
 
@@ -180,6 +176,8 @@ void setup()
 void read_IR_sensors(void) {
     IR_sensor_left_top = analogRead(IR_SENSOR_LEFT_TOP_PIN);
     IR_sensor_right_top = analogRead(IR_SENSOR_RIGHT_TOP_PIN);
+    IR_sensor_middle_top = analogRead(IR_SENSOR_MIDDLE_TOP_PIN);
+    IR_sensor_rear = analogRead(IR_SENSOR_REAR_PIN);
     IR_sensor_left_bottom = analogRead(IR_SENSOR_LEFT_BOTTOM_PIN);
     IR_sensor_right_bottom = analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN);
 }
@@ -258,33 +256,32 @@ void state_controller_task(void)
             if (limit_switch_left == 1) {
                 // State change
             }
+            
             //##Start lowering the arm with the stepper motor (anticlockwise)##
             //##Start raising the arm with the stepper motor (clockwise)##
             //##Optional load cell check##
-            //##Actuate moving guide##
             //##Change to searching state##
             // Stepper motor sequences and electromagnet activation
             //stepper();
-            play_tune(); 
+            //play_tune(); 
             //wdt_reset(); // Resets watchdog timer
             
         case PICKUP_RIGHT:
             // Stepper motor sequences and electromagnet activation
             //stepper();
-            play_tune(); 
+            //play_tune(); 
             //wdt_reset(); // Resets watchdog timer
             //##Start raising the arm with the stepper motor (clockwise)##
             //##Optional load cell check##
-            //##Actuate moving guide##
             //##Change to searching state##
             //##Start lowering the arm with the stepper motor (anticlockwise)##
             //##Limit switch is activated##
             if (limit_switch_right == 1) {
             // State change
-        }
+            }
     }
 }
-     
+    
 
 void loop()
 { 
