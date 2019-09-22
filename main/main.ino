@@ -93,11 +93,12 @@ int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
 int blocked = 0;
-enum modes {SEARCHING,GOTO, PICKUP, FINISHED};
+enum modes {SEARCHING, GOTO, PICKUP_LEFT, PICKUP_RIGHT, FINISHED};
 enum modes program_state = SEARCHING;
 Hx711 scale(LOAD_CELL_LEFT_1_PIN,LOAD_CELL_LEFT_1_PIN);   // Setup pins for digital communications with weight IC
 // Hx711 scale(LOAD_CELL_RIGHT_2_PIN,LOAD_CELL_RIGHT_2_PIN); // Setup pins for digital communications with weight IC
 
+// Initialise circular buffers for IR signals
 circBuffer sensor1;
 circBuffer sensor2;
 circBuffer sensor3;
@@ -194,10 +195,16 @@ void read_proximity_sensors(void) {
 
     if (inductive_prox_sensor_left == 1) {
         //##Change to pickup state##
+        program_state = PICKUP_LEFT;
         //##Stop robot##
         //##Start lowering the arm with the stepper motor (anticlockwise)##
         //##Limit switch is activated##
-        //##Wait a short period for the electromagnet to make contact(anticlockwise)##
+        if (limit_switch_left == 1) {
+            // State change
+        }
+
+
+        
         //##Start raising the arm with the stepper motor (clockwise)##
           //##Optional load cell check##
           //##Actuate moving guide##
@@ -206,10 +213,19 @@ void read_proximity_sensors(void) {
     
     if (inductive_prox_sensor_right == 1) {
         //##Change to pickup state##
+        program_state = PICKUP_RIGHT;
+
+
+
+        
         //##Stop robot##
+        
         //##Start lowering the arm with the stepper motor (anticlockwise)##
         //##Limit switch is activated##
-        //##Wait a short period for the electromagnet to make contact(anticlockwise)##
+        if (limit_switch_right == 1) {
+            // State change
+        }
+        
         //##Start raising the arm with the stepper motor (clockwise)##
           //##Optional load cell check##
           //##Actuate moving guide##
@@ -268,7 +284,13 @@ void state_controller_task(void)
             //flash_led(IR_sensor_left_top);
             }
             
-        case PICKUP:
+        case PICKUP_LEFT:
+            // Stepper motor sequences and electromagnet activation
+            //stepper();
+            play_tune(); 
+            //wdt_reset(); // Resets watchdog timer
+            
+        case PICKUP_RIGHT:
             // Stepper motor sequences and electromagnet activation
             //stepper();
             play_tune(); 
