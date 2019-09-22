@@ -56,10 +56,10 @@ o = stepper motors
 #define LOAD_CELL_RIGHT_1_PIN                 46
 #define LOAD_CELL_RIGHT_2_PIN                 47
 #define SERVO_FRONT_PIN                       34
-#define INDUCTIVE_PROX_SENSOR_LEFT_HORIZ_PIN  38
-#define INDUCTIVE_PROX_SENSOR_LEFT_VERT_PIN   39
-#define INDUCTIVE_PROX_SENSOR_RIGHT_HORIZ_PIN 38
-#define INDUCTIVE_PROX_SENSOR_RIGHT_VERT_PIN  39
+#define INDUCTIVE_PROX_SENSOR_LEFT_PIN        38
+#define LIMIT_SWITCH_LEFT_PIN                 39
+#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN       38
+#define LIMIT_SWITCH_RIGHT_PIN                39
 #define PROX_SENSOR_LEFT_PIN                  38
 #define PROX_SENSOR_RIGHT_PIN                 39
 
@@ -85,10 +85,10 @@ int IR_sensor_right_top = 0;
 int IR_sensor_left_bottom = 0;
 int IR_sensor_right_bottom = 0;
 
-int inductive_prox_sensor_left_horiz = 0;
-int inductive_prox_sensor_left_vert = 0;
-int inductive_prox_sensor_right_horiz = 0;
-int inductive_prox_sensor_right_vert = 0;
+int inductive_prox_sensor_left = 0;
+int limit_switch_left = 0;
+int inductive_prox_sensor_right = 0;
+int limit_switch_right = 0;
 int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
@@ -116,7 +116,6 @@ Task t_stepper_motor(MS_STEPPER_MOTOR_TASK_PERIOD, MS_STEPPER_MOTOR_TASK_NUM_EXE
 Task t_state_controller(MS_STATE_CONTROLLER_TASK_PERIOD, MS_STATE_CONTROLLER_TASK_NUM_EXECUTE, &state_controller_task);
 Task t_read_proximity_sensors(MS_READ_PROXIMITY_TASK_PERIOD, MS_READ_PROXIMITY_NUM_EXECUTE, &read_proximity_sensors);
 
-
 Scheduler taskManager;
 
 
@@ -134,7 +133,7 @@ void taskInit() {
   t_read_IR_sensors.enable();
   t_stepper_motor.enable();
   t_state_controller.enable();
-  t_read_proximity_sensors.enable();
+  t_read_proximity_sensors.enable(); // ##########################
 
  //Serial.println("Tasks have been initialised \n");
 }
@@ -158,10 +157,10 @@ void setup()
     pinMode(SERVO_FRONT_PIN, OUTPUT);
 
     // Proximity sensors
-    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_HORIZ_PIN, INPUT);
-    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_VERT_PIN, INPUT);  
-    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_HORIZ_PIN, INPUT);  
-    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_VERT_PIN, INPUT);  
+    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT);
+    pinMode(LIMIT_SWITCH_LEFT_PIN, INPUT);  
+    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT);  
+    pinMode(LIMIT_SWITCH_RIGHT_PIN, INPUT);  
     pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
     pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);  
 
@@ -186,12 +185,43 @@ void read_IR_sensors(void) {
 
 
 void read_proximity_sensors(void) {
-    inductive_prox_sensor_left_horiz = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_HORIZ_PIN);
-    inductive_prox_sensor_left_vert = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_VERT_PIN);
-    inductive_prox_sensor_right_horiz = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_HORIZ_PIN);
-    inductive_prox_sensor_right_vert = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_VERT_PIN);
+    inductive_prox_sensor_left = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_PIN);
+    limit_switch_left = digitalRead(LIMIT_SWITCH_LEFT_PIN);
+    inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
+    limit_switch_right = digitalRead(LIMIT_SWITCH_RIGHT_PIN);
     prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
     prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
+
+    if (inductive_prox_sensor_left == 1) {
+        //##Change to pickup state##
+        //##Stop robot##
+        //##Start lowering the arm with the stepper motor (anticlockwise)##
+        //##Limit switch is activated##
+        //##Wait a short period for the electromagnet to make contact(anticlockwise)##
+        //##Start raising the arm with the stepper motor (clockwise)##
+          //##Optional load cell check##
+          //##Actuate moving guide##
+        //##Change to searching state##
+    }
+    
+    if (inductive_prox_sensor_right == 1) {
+        //##Change to pickup state##
+        //##Stop robot##
+        //##Start lowering the arm with the stepper motor (anticlockwise)##
+        //##Limit switch is activated##
+        //##Wait a short period for the electromagnet to make contact(anticlockwise)##
+        //##Start raising the arm with the stepper motor (clockwise)##
+          //##Optional load cell check##
+          //##Actuate moving guide##
+        //##Change to searching state## 
+    }
+
+
+
+
+    
+
+    
 }
 
 
