@@ -95,8 +95,12 @@ int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
 int blocked = 0;
-enum modes {SEARCHING, GOTO, PICKUP_LEFT, PICKUP_RIGHT, FINISHED};
+enum modes {SEARCHING, GOTO, PICKUP, FINISHED};
 enum modes program_state = SEARCHING;
+
+enum pickup_modes {LOWERING, RAISING};
+enum pickup_modes pickup_state = LOWERING;
+
 Hx711 scale(LOAD_CELL_LEFT_1_PIN,LOAD_CELL_LEFT_1_PIN);   // Setup pins for digital communications with weight IC
 // Hx711 scale(LOAD_CELL_RIGHT_2_PIN,LOAD_CELL_RIGHT_2_PIN); // Setup pins for digital communications with weight IC
 
@@ -251,8 +255,19 @@ void state_controller_task(void)
             } else {
             //flash_led(IR_sensor_left_top);
             }
+            ######break
+        case PICKUP:
+            switch(pickup_mode)
+            {
+
+
+
+
+              
+            }
+               
+
             
-        case PICKUP_LEFT:
             if (limit_switch_left == 1) {
                 // State change
             }
@@ -266,7 +281,6 @@ void state_controller_task(void)
             //play_tune(); 
             //wdt_reset(); // Resets watchdog timer
             
-        case PICKUP_RIGHT:
             // Stepper motor sequences and electromagnet activation
             //stepper();
             //play_tune(); 
