@@ -95,11 +95,11 @@ int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
 int blocked = 0;
-enum modes {SEARCHING, GOTO, PICKUP, FINISHED};
+enum modes {SEARCHING, GOTO, PICKUP, FAKE, FINISHED};
 enum modes program_state = SEARCHING;
 
-enum pickup_modes {LOWERING, RAISING};
-enum pickup_modes pickup_state = LOWERING;
+enum pickup_modes {INACTIVE, LOWERING_LEFT, RAISING_LEFT, LOWERING_RIGHT, RAISING_RIGHT};
+enum pickup_modes pickup_state = INACTIVE;
 
 Hx711 scale(LOAD_CELL_LEFT_1_PIN,LOAD_CELL_LEFT_1_PIN);   // Setup pins for digital communications with weight IC
 // Hx711 scale(LOAD_CELL_RIGHT_2_PIN,LOAD_CELL_RIGHT_2_PIN); // Setup pins for digital communications with weight IC
@@ -200,7 +200,7 @@ void read_proximity_sensors(void) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
         //##Change to pickup state##
-        program_state = PICKUP_LEFT;
+        program_state = PICKUP;
     }
     
     if (inductive_prox_sensor_right == 1) {
@@ -208,7 +208,20 @@ void read_proximity_sensors(void) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
         //##Change to pickup state##
-        program_state = PICKUP_RIGHT;
+        program_state = PICKUP;
+    }
+
+
+    if (prox_sensor_left == 1 && inductive_prox_sensor_left == 1) {
+      // Fake weight detected
+      program_state = FAKE;
+    }
+
+
+    if (prox_sensor_right == 1 && inductive_prox_sensor_right == 1) {
+      // Fake weight detected
+      program_state = FAKE;
+
     }
 }
 
@@ -219,7 +232,7 @@ void stepper_motor_task(void)
 }
 
 
-void state_controller_task(void) 
+void state_controller_task(void)
 {
     switch(program_state) 
     {
@@ -255,44 +268,35 @@ void state_controller_task(void)
             } else {
             //flash_led(IR_sensor_left_top);
             }
-            ######break
+            break;
         case PICKUP:
-            switch(pickup_mode)
+            switch(pickup_state)
             {
-
-
-
-
-              
+                case LOWERING_LEFT:
+                    //##Start lowering the arm with the stepper motor (anticlockwise)##
+                    //stepper();
+                    if (limit_switch_left == 1) {
+                        pickup_state = RAISING_LEFT;
+                    }
+                    break;
+                case RAISING_LEFT:
+                    //stepper(); clockwise
+                    // Reaches step count or load cells activated???
+                    break;
+                case LOWERING_RIGHT:
+                    // anticlockwise
+                    if (limit_switch_right == 1) {
+                        pickup_state = RAISING_RIGHT;
+                    }
+                    break;
+                case RAISING_RIGHT:
+                  //stepper(); clockwise
+                  // Reaches step count or load cells activated???
+                  break;
             }
-               
-
-            
-            if (limit_switch_left == 1) {
-                // State change
-            }
-            
-            //##Start lowering the arm with the stepper motor (anticlockwise)##
-            //##Start raising the arm with the stepper motor (clockwise)##
-            //##Optional load cell check##
-            //##Change to searching state##
-            // Stepper motor sequences and electromagnet activation
-            //stepper();
+            break;            
             //play_tune(); 
             //wdt_reset(); // Resets watchdog timer
-            
-            // Stepper motor sequences and electromagnet activation
-            //stepper();
-            //play_tune(); 
-            //wdt_reset(); // Resets watchdog timer
-            //##Start raising the arm with the stepper motor (clockwise)##
-            //##Optional load cell check##
-            //##Change to searching state##
-            //##Start lowering the arm with the stepper motor (anticlockwise)##
-            //##Limit switch is activated##
-            if (limit_switch_right == 1) {
-            // State change
-            }
     }
 }
     
