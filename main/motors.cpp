@@ -147,7 +147,7 @@ void stepper_motor_write(int dir_pin, int step_pin, int motor_direction)
 }
 
 
-void stepper_motor_step(int stepper_motor_side, int stepper_motor_direction, int steps) 
+void stepper_motor_step(int stepper_motor_side, int stepper_motor_direction) 
 {
   switch(stepper_motor_side)
   {

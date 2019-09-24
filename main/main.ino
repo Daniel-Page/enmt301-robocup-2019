@@ -39,6 +39,8 @@ o = stepper motors
 #include "led.h"
 #include "src/Hx711/Hx711.h" // Load cell library
 #include "circular_buffer.h"
+#include <math.h>
+
 
 
 //**********************************************************************************
@@ -66,7 +68,7 @@ o = stepper motors
 // Task scheduler tasks
 #define MS_READ_IR_TASK_PERIOD                2 // In ms. Also note 0 is the equivalent to the main loop
 #define MS_LED_TASK_PERIOD                    2000
-#define MS_STEPPER_MOTOR_TASK_PERIOD          1
+#define MS_STEPPER_MOTOR_TASK_PERIOD          2000
 #define MS_STATE_CONTROLLER_TASK_PERIOD       2
 #define MS_READ_PROXIMITY_TASK_PERIOD         2
 
@@ -109,6 +111,8 @@ circBuffer sensor1;
 circBuffer sensor2;
 circBuffer sensor3;
 circBuffer sensor4;
+circBuffer sensor5;
+circBuffer sensor6;
 
 
 void read_IR_sensors(void);
@@ -169,6 +173,8 @@ void setup()
     initCircBuff(&sensor2);
     initCircBuff(&sensor3);
     initCircBuff(&sensor4);
+    initCircBuff(&sensor5);
+    initCircBuff(&sensor6);
 
     initTune();
     initLed();
@@ -177,17 +183,25 @@ void setup()
 }
 
 
-void read_IR_sensors(void) {
-    IR_sensor_left_top = analogRead(IR_SENSOR_LEFT_TOP_PIN);
-    IR_sensor_right_top = analogRead(IR_SENSOR_RIGHT_TOP_PIN);
-    IR_sensor_middle_top = analogRead(IR_SENSOR_MIDDLE_TOP_PIN);
-    IR_sensor_rear = analogRead(IR_SENSOR_REAR_PIN);
-    IR_sensor_left_bottom = analogRead(IR_SENSOR_LEFT_BOTTOM_PIN);
-    IR_sensor_right_bottom = analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN);
+float compute_distance(int sensor_value)
+{
+    return 1510*pow(sensor_value,-1.02);
 }
 
 
-void read_proximity_sensors(void) {
+void read_IR_sensors(void) 
+{
+    IR_sensor_left_top = updateCircBuff(&sensor1, analogRead(IR_SENSOR_LEFT_TOP_PIN));
+    IR_sensor_right_top = updateCircBuff(&sensor2, analogRead(IR_SENSOR_RIGHT_TOP_PIN));
+    IR_sensor_middle_top = updateCircBuff(&sensor3, analogRead(IR_SENSOR_MIDDLE_TOP_PIN));
+    IR_sensor_rear = updateCircBuff(&sensor4, analogRead(IR_SENSOR_REAR_PIN));
+    IR_sensor_left_bottom = updateCircBuff(&sensor5, analogRead(IR_SENSOR_LEFT_BOTTOM_PIN));
+    IR_sensor_right_bottom = updateCircBuff(&sensor6, analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN));
+}
+
+
+void read_proximity_sensors(void) 
+{
     inductive_prox_sensor_left = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_PIN);
     limit_switch_left = digitalRead(LIMIT_SWITCH_LEFT_PIN);
     inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
@@ -228,7 +242,7 @@ void read_proximity_sensors(void) {
 
 void stepper_motor_task(void)
 {
-    stepper_motor_step(RIGHT, ANTICLOCKWISE, 2000);
+    stepper_motor_step(RIGHT, ANTICLOCKWISE);
 }
 
 
@@ -237,36 +251,25 @@ void state_controller_task(void)
     switch(program_state) 
     {
         case SEARCHING:
-            if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200) { // When nothing blocks both sensors
-            blocked = 0;   
-            static int variable_speed_count = 0;
-            static int variable_speed = 40;
-            if (variable_speed_count >= 1500 && variable_speed <= 75) {
-                variable_speed++;
-                variable_speed_count = 0;
-            } else {
-                variable_speed_count++;
-            }
-            setMotor(RIGHT, CLOCKWISE, variable_speed);  
-            setMotor(LEFT, CLOCKWISE, variable_speed);
-            } else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200) { // When both sensors are blocked
-                blocked = 1;
-                //Serial.println(blocked);
 
-               // Runs when both sensors are block for 100 counts
-            } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right sensor is blocked
-                turnRobot(ANTICLOCKWISE, 50);
-            } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left sensor is blocked
-                turnRobot(CLOCKWISE, 50);
-            } else if (blocked) { // While both sensors are blocked
-                setMotor(RIGHT, ANTICLOCKWISE, 40);   
-                setMotor(LEFT, ANTICLOCKWISE, 50);   
-            }
-
-            if (IR_sensor_right_top >= IR_sensor_left_top) {
-            //flash_led(IR_sensor_right_top); // Poll to flash at a rate based on the sensor input
-            } else {
-            //flash_led(IR_sensor_left_top);
+            if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
+                //blocked = 0;   
+                setMotor(RIGHT, CLOCKWISE, 100);
+                setMotor(LEFT, CLOCKWISE, 100);
+            //} else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200 && IR_sensor_right_bottom >= 500 && IR_sensor_left_bottom >= 500 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
+              //      blocked = 1;
+            } else if (IR_sensor_right_bottom >= 500 && !blocked) { // When the right bottom sensor is blocked
+                  turnRobot(ANTICLOCKWISE, 100);  
+            } else if (IR_sensor_left_bottom >= 500 && !blocked) { // When the left bottom sensor is blocked
+                  turnRobot(ANTICLOCKWISE, 100);                        
+            } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right top sensor is blocked
+                  turnRobot(ANTICLOCKWISE, 100);
+            } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left top sensor is blocked
+                  turnRobot(CLOCKWISE, 100);
+            } else if (IR_sensor_middle_top >= 50 && !blocked) { // When the middle top sensor is blocked
+                  turnRobot(CLOCKWISE, 100);
+            //} else if (blocked) { // While all front sensors are blocked
+                //  turnRobot(ANTICLOCKWISE, 100);
             }
             break;
         case PICKUP:

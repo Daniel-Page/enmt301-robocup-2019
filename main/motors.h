@@ -36,7 +36,7 @@ void turnRobot(int turn_direction, float percentage_speed);
 void stepper_motor_write(int dir_pin, int step_pin, int motor_direction);
 
 
-void stepper_motor_step(int stepper_motor_side, int motor_direction, int steps);
+void stepper_motor_step(int stepper_motor_side, int motor_direction);
 
 
 #endif /* MOTORS_H_ */

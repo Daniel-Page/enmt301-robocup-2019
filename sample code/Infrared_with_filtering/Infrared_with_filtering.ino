@@ -42,18 +42,9 @@ void loop() {
   sensorValue5 = analogRead(analogInPin5);
   sensorValue6 = analogRead(analogInPin6);
 
-  Serial.println(updateCircBuff(&sensor1, sensorValue1));
-  Serial.print("\n");
-  Serial.println(updateCircBuff(&sensor2, sensorValue2));
-  Serial.print("\n");
-  Serial.println(updateCircBuff(&sensor3, sensorValue3));
-  Serial.print("\n");
-  Serial.println(updateCircBuff(&sensor4, sensorValue4));
-  Serial.print("\n");
-  Serial.println(updateCircBuff(&sensor5, sensorValue5));
-  Serial.print("\n");
-  Serial.println(updateCircBuff(&sensor6, sensorValue6));
 
+  Serial.println(updateCircBuff(&sensor6, sensorValue6));
+  Serial.print(" ");
 
   
   delay(2); // 2 ms ADC settling time
