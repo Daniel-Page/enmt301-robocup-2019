@@ -58,17 +58,17 @@ o = stepper motors
 #define LOAD_CELL_RIGHT_1_PIN                 46
 #define LOAD_CELL_RIGHT_2_PIN                 47
 #define SERVO_FRONT_PIN                       34
-#define INDUCTIVE_PROX_SENSOR_LEFT_PIN        38
+#define INDUCTIVE_PROX_SENSOR_LEFT_PIN        21
 #define LIMIT_SWITCH_LEFT_PIN                 39
-#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN       38
+#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN       43
 #define LIMIT_SWITCH_RIGHT_PIN                39
-#define PROX_SENSOR_LEFT_PIN                  38
-#define PROX_SENSOR_RIGHT_PIN                 39
+#define PROX_SENSOR_LEFT_PIN                  42
+#define PROX_SENSOR_RIGHT_PIN                 20
 
 // Task scheduler tasks
 #define MS_READ_IR_TASK_PERIOD                2 // In ms. Also note 0 is the equivalent to the main loop
 #define MS_LED_TASK_PERIOD                    2000
-#define MS_STEPPER_MOTOR_TASK_PERIOD          2000
+#define MS_STEPPER_MOTOR_TASK_PERIOD          1
 #define MS_STATE_CONTROLLER_TASK_PERIOD       2
 #define MS_READ_PROXIMITY_TASK_PERIOD         2
 #define MS_WEIGHT_DETECT_TASK_PERIOD          2
@@ -243,7 +243,6 @@ if (difference > 5 && difference < 15) {
 }
 
 
-
 void read_proximity_sensors(void) 
 {
     inductive_prox_sensor_left = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_PIN);
@@ -287,6 +286,7 @@ void read_proximity_sensors(void)
 void stepper_motor_task(void)
 {
     stepper_motor_step(RIGHT, ANTICLOCKWISE);
+    //stepper_motor_step(LEFT, ANTICLOCKWISE);
 }
 
 
