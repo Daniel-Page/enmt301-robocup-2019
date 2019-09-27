@@ -43,7 +43,7 @@ void loop() {
   sensorValue6 = analogRead(analogInPin6);
 
 
-  Serial.println(updateCircBuff(&sensor6, sensorValue6));
+  Serial.println(updateCircBuff(&sensor5, sensorValue5));
   Serial.print(" ");
 
   

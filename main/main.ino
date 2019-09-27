@@ -47,8 +47,8 @@ o = stepper motors
 // Definitions
 //**********************************************************************************
 #define BAUD_RATE                             9600 // Bits/s
-#define IR_SENSOR_LEFT_TOP_PIN                A6
-#define IR_SENSOR_RIGHT_TOP_PIN               A10
+#define IR_SENSOR_RIGHT_TOP_PIN               A6
+#define IR_SENSOR_LEFT_TOP_PIN                A10
 #define IR_SENSOR_MIDDLE_TOP_PIN              A8
 #define IR_SENSOR_REAR_PIN                    A4
 #define IR_SENSOR_LEFT_BOTTOM_PIN             A2
@@ -71,12 +71,16 @@ o = stepper motors
 #define MS_STEPPER_MOTOR_TASK_PERIOD          2000
 #define MS_STATE_CONTROLLER_TASK_PERIOD       2
 #define MS_READ_PROXIMITY_TASK_PERIOD         2
+#define MS_WEIGHT_DETECT_TASK_PERIOD          2
+
 
 #define MS_READ_IR_TASK_NUM_EXECUTE          -1 // -1 means infinite
 #define MS_LED_TASK_NUM_EXECUTE              -1
 #define MS_STEPPER_MOTOR_TASK_NUM_EXECUTE    -1
 #define MS_STATE_CONTROLLER_TASK_NUM_EXECUTE -1
 #define MS_READ_PROXIMITY_NUM_EXECUTE        -1
+#define MS_WEIGHT_DETECT_NUM_EXECUTE         -1
+
 
 
 //**********************************************************************************
@@ -120,12 +124,15 @@ void stepper_motor_task(void);
 void state_controller_task(void);
 void state_controller_task(void);
 void read_proximity_sensors(void);
+void weight_detect(void);
 
 
 Task t_read_IR_sensors(MS_READ_IR_TASK_PERIOD, MS_READ_IR_TASK_NUM_EXECUTE, &read_IR_sensors);
 Task t_stepper_motor(MS_STEPPER_MOTOR_TASK_PERIOD, MS_STEPPER_MOTOR_TASK_NUM_EXECUTE, &stepper_motor_task);
 Task t_state_controller(MS_STATE_CONTROLLER_TASK_PERIOD, MS_STATE_CONTROLLER_TASK_NUM_EXECUTE, &state_controller_task);
 Task t_read_proximity_sensors(MS_READ_PROXIMITY_TASK_PERIOD, MS_READ_PROXIMITY_NUM_EXECUTE, &read_proximity_sensors);
+Task t_weight_detect(MS_WEIGHT_DETECT_TASK_PERIOD, MS_WEIGHT_DETECT_NUM_EXECUTE, &weight_detect);
+
 
 Scheduler taskManager;
 
@@ -139,12 +146,16 @@ void taskInit() {
   taskManager.addTask(t_stepper_motor);
   taskManager.addTask(t_state_controller);
   taskManager.addTask(t_read_proximity_sensors);
+  taskManager.addTask(t_weight_detect);
+
 
   // Enable the tasks
   t_read_IR_sensors.enable();
-  //t_stepper_motor.enable();
-  t_state_controller.enable();
-  t_read_proximity_sensors.enable(); // ##########################
+  t_stepper_motor.enable();
+  //t_state_controller.enable();
+  //t_read_proximity_sensors.enable(); // ##########################
+  t_weight_detect.enable();
+
 
  //Serial.println("Tasks have been initialised \n");
 }
@@ -183,10 +194,17 @@ void setup()
 }
 
 
-float compute_distance(int sensor_value)
+float compute_distance_green(int sensor_value)
 {
-    return 1510*pow(sensor_value,-1.02);
+    return 1506.6*pow(sensor_value,-1.0202);
 }
+
+
+float compute_distance_brown(int sensor_value)
+{
+    return 1438*pow(sensor_value,-0.8095);
+}
+
 
 
 void read_IR_sensors(void) 
@@ -198,6 +216,32 @@ void read_IR_sensors(void)
     IR_sensor_left_bottom = updateCircBuff(&sensor5, analogRead(IR_SENSOR_LEFT_BOTTOM_PIN));
     IR_sensor_right_bottom = updateCircBuff(&sensor6, analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN));
 }
+
+
+void weight_detect(void) 
+{
+float top_left_corrected;
+float bottom_left_corrected;
+float difference;
+
+top_left_corrected = compute_distance_green(IR_sensor_left_top);
+bottom_left_corrected = compute_distance_brown(IR_sensor_left_bottom) + 7;
+difference = top_left_corrected - bottom_left_corrected;
+
+//Serial.println(top_left_corrected - bottom_left_corrected);
+
+
+//Serial.print(compute_distance_green(IR_sensor_left_top));
+//Serial.print(" ");
+//Serial.print(compute_distance_brown(IR_sensor_left_bottom));
+//Serial.print("\n");
+
+if (difference > 5 && difference < 15) {
+    Serial.println("Weight");
+}
+
+}
+
 
 
 void read_proximity_sensors(void) 
@@ -251,7 +295,7 @@ void state_controller_task(void)
     switch(program_state) 
     {
         case SEARCHING:
-
+            static int rand_bit = random(0,1);
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
                 //blocked = 0;   
                 setMotor(RIGHT, CLOCKWISE, 100);
