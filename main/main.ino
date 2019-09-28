@@ -58,25 +58,25 @@ o = stepper motors
 #define LOAD_CELL_RIGHT_1_PIN                 46
 #define LOAD_CELL_RIGHT_2_PIN                 47
 #define SERVO_FRONT_PIN                       34
-#define INDUCTIVE_PROX_SENSOR_LEFT_PIN        21
+#define INDUCTIVE_PROX_SENSOR_LEFT_PIN        20
 #define LIMIT_SWITCH_LEFT_PIN                 39
-#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN       43
+#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN       21
 #define LIMIT_SWITCH_RIGHT_PIN                39
 #define PROX_SENSOR_LEFT_PIN                  42
-#define PROX_SENSOR_RIGHT_PIN                 20
+#define PROX_SENSOR_RIGHT_PIN                 22    //<<<<<<<<<<<<<<<was20
 
 // Task scheduler tasks
 #define MS_READ_IR_TASK_PERIOD                2 // In ms. Also note 0 is the equivalent to the main loop
 #define MS_LED_TASK_PERIOD                    2000
 #define MS_STEPPER_MOTOR_TASK_PERIOD          1
 #define MS_STATE_CONTROLLER_TASK_PERIOD       2
-#define MS_READ_PROXIMITY_TASK_PERIOD         2
+#define MS_READ_PROXIMITY_TASK_PERIOD         3
 #define MS_WEIGHT_DETECT_TASK_PERIOD          2
 
 
 #define MS_READ_IR_TASK_NUM_EXECUTE          -1 // -1 means infinite
 #define MS_LED_TASK_NUM_EXECUTE              -1
-#define MS_STEPPER_MOTOR_TASK_NUM_EXECUTE    -1
+#define MS_STEPPER_MOTOR_TASK_NUM_EXECUTE     20
 #define MS_STATE_CONTROLLER_TASK_NUM_EXECUTE -1
 #define MS_READ_PROXIMITY_NUM_EXECUTE        -1
 #define MS_WEIGHT_DETECT_NUM_EXECUTE         -1
@@ -105,7 +105,7 @@ enum modes {SEARCHING, GOTO, PICKUP, FAKE, FINISHED};
 enum modes program_state = SEARCHING;
 
 enum pickup_modes {INACTIVE, LOWERING_LEFT, RAISING_LEFT, LOWERING_RIGHT, RAISING_RIGHT};
-enum pickup_modes pickup_state = INACTIVE;
+enum pickup_modes pickup_state = LOWERING_LEFT;
 
 Hx711 scale(LOAD_CELL_LEFT_1_PIN,LOAD_CELL_LEFT_1_PIN);   // Setup pins for digital communications with weight IC
 // Hx711 scale(LOAD_CELL_RIGHT_2_PIN,LOAD_CELL_RIGHT_2_PIN); // Setup pins for digital communications with weight IC
@@ -151,9 +151,9 @@ void taskInit() {
 
   // Enable the tasks
   t_read_IR_sensors.enable();
-  t_stepper_motor.enable();
+  //t_stepper_motor.enable();
   //t_state_controller.enable();
-  //t_read_proximity_sensors.enable(); // ##########################
+  t_read_proximity_sensors.enable(); // ##########################
   t_weight_detect.enable();
 
 
@@ -168,17 +168,23 @@ void setup()
 
     // wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
 
+
+
     Serial.begin(BAUD_RATE); // Initialises serial
+
+    Serial.println("setup....");
 
     pinMode(SERVO_FRONT_PIN, OUTPUT);
 
     // Proximity sensors
-    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT);
+
     pinMode(LIMIT_SWITCH_LEFT_PIN, INPUT);  
-    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT);  
     pinMode(LIMIT_SWITCH_RIGHT_PIN, INPUT);  
     pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
     pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);  
+
+    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT);
+    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT);  
 
     initCircBuff(&sensor1);
     initCircBuff(&sensor2);
@@ -191,6 +197,7 @@ void setup()
     initLed();
     initMotors();
     taskInit();
+Serial.println("setup....exit");
 }
 
 
@@ -237,7 +244,7 @@ difference = top_left_corrected - bottom_left_corrected;
 //Serial.print("\n");
 
 if (difference > 5 && difference < 15) {
-    Serial.println("Weight");
+    //Serial.println("Weight");
 }
 
 }
@@ -245,47 +252,29 @@ if (difference > 5 && difference < 15) {
 
 void read_proximity_sensors(void) 
 {
+
+  int x,y;
+
+    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
+    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
+  
     inductive_prox_sensor_left = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_PIN);
     limit_switch_left = digitalRead(LIMIT_SWITCH_LEFT_PIN);
     inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
     limit_switch_right = digitalRead(LIMIT_SWITCH_RIGHT_PIN);
     prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
     prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
-
-    if (inductive_prox_sensor_left == 1) {
-        //##Stop robot##
-        setMotor(LEFT, STATIONARY, 0);
-        setMotor(RIGHT, STATIONARY, 0);
-        //##Change to pickup state##
-        program_state = PICKUP;
-    }
     
-    if (inductive_prox_sensor_right == 1) {
-        //##Stop robot##
-        setMotor(LEFT, STATIONARY, 0);
-        setMotor(RIGHT, STATIONARY, 0);
-        //##Change to pickup state##
-        program_state = PICKUP;
-    }
-
-
-    if (prox_sensor_left == 1 && inductive_prox_sensor_left == 1) {
-      // Fake weight detected
-      program_state = FAKE;
-    }
-
-
-    if (prox_sensor_right == 1 && inductive_prox_sensor_right == 1) {
-      // Fake weight detected
-      program_state = FAKE;
-
-    }
+    Serial.print(inductive_prox_sensor_left);
+    Serial.print(" ");
+    Serial.print(inductive_prox_sensor_right);
+    Serial.print("\n");
 }
 
 
 void stepper_motor_task(void)
 {
-    stepper_motor_step(RIGHT, ANTICLOCKWISE);
+    stepper_motor_step(RIGHT, CLOCKWISE);
     //stepper_motor_step(LEFT, ANTICLOCKWISE);
 }
 
@@ -322,16 +311,16 @@ void state_controller_task(void)
                 case LOWERING_LEFT:
                     //##Start lowering the arm with the stepper motor (anticlockwise)##
                     //stepper();
-                    if (limit_switch_left == 1) {
-                        pickup_state = RAISING_LEFT;
-                    }
+                    t_stepper_motor.enable();
+               
                     break;
                 case RAISING_LEFT:
                     //stepper(); clockwise
+                    t_stepper_motor.enable();
                     // Reaches step count or load cells activated???
                     break;
                 case LOWERING_RIGHT:
-                    // anticlockwise
+  //t_stepper_motor.enable();
                     if (limit_switch_right == 1) {
                         pickup_state = RAISING_RIGHT;
                     }
