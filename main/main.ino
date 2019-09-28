@@ -109,11 +109,10 @@ circBuffer sensor5;
 circBuffer sensor6;
 
 
-void read_IR_sensors(void);
-void stepper_motor_left_task(void);
-void stepper_motor_right_task(void);
-void state_controller_task(void);
-void read_proximity_sensors(void);
+void read_IR_sensors();
+void state_controller_task();
+void read_proximity_sensors();
+void taskInit();
 
 
 Task t_read_IR_sensors(MS_READ_IR_TASK_PERIOD, MS_READ_IR_TASK_NUM_EXECUTE, &read_IR_sensors);
@@ -122,26 +121,6 @@ Task t_read_proximity_sensors(MS_READ_PROXIMITY_TASK_PERIOD, MS_READ_PROXIMITY_N
 
 
 Scheduler taskManager;
-
-
-void taskInit() {  
-    // This is a class/library function. Initialise the task scheduler
-    taskManager.init();     
-    
-    // Add tasks to the scheduler
-    taskManager.addTask(t_read_IR_sensors);
-    taskManager.addTask(t_state_controller);
-    taskManager.addTask(t_read_proximity_sensors);
-    
-    
-    // Enable the tasks
-    t_read_IR_sensors.enable();
-    t_state_controller.enable();
-    t_read_proximity_sensors.enable();
-    
-    
-    // Serial.println("Tasks have been initialised \n");
-}
 
 
 void setup()
@@ -175,7 +154,7 @@ void setup()
 }
 
 
-void read_IR_sensors(void) 
+void read_IR_sensors() 
 {
     IR_sensor_left_top = updateCircBuff(&sensor1, analogRead(IR_SENSOR_LEFT_TOP_PIN));
     IR_sensor_right_top = updateCircBuff(&sensor2, analogRead(IR_SENSOR_RIGHT_TOP_PIN));
@@ -186,7 +165,7 @@ void read_IR_sensors(void)
 }
 
 
-void read_proximity_sensors(void) 
+void read_proximity_sensors() 
 {
     pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
     pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
@@ -217,7 +196,7 @@ void read_proximity_sensors(void)
 }
 
 
-void state_controller_task(void)
+void state_controller_task()
 {
     static int turn_count;
     switch(program_state) 
@@ -267,7 +246,7 @@ void state_controller_task(void)
                         stepper_motor_step(LEFT, CLOCKWISE);
                         step_count_left++;
                     } else {
-                        step_count_left = 0;
+                        step_count_left = 50;
                         pickup_state = RAISING_LEFT;
                     }
                     break;
@@ -284,7 +263,7 @@ void state_controller_task(void)
                         stepper_motor_step(RIGHT, CLOCKWISE);
                         step_count_right++;
                     } else {
-                        step_count_right = 0;
+                        step_count_right = 50;
                         pickup_state = RAISING_RIGHT;
                     }
                     break;
@@ -305,6 +284,25 @@ void state_controller_task(void)
     }
 }
     
+
+void taskInit() 
+{  
+    // This is a class/library function. Initialise the task scheduler
+    taskManager.init();     
+    
+    // Add tasks to the scheduler
+    taskManager.addTask(t_read_IR_sensors);
+    taskManager.addTask(t_state_controller);
+    taskManager.addTask(t_read_proximity_sensors);
+    
+    // Enable the tasks
+    t_read_IR_sensors.enable();
+    t_state_controller.enable();
+    t_read_proximity_sensors.enable();
+    
+    Serial.println("Tasks initialised");
+}
+
 
 void loop()
 { 
