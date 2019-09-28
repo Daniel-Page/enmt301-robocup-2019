@@ -152,12 +152,12 @@ void taskInit() {
   // Enable the tasks
   t_read_IR_sensors.enable();
   //t_stepper_motor.enable();
-  //t_state_controller.enable();
+  t_state_controller.enable();
   t_read_proximity_sensors.enable(); // ##########################
   t_weight_detect.enable();
 
 
- //Serial.println("Tasks have been initialised \n");
+ // Serial.println("Tasks have been initialised \n");
 }
 
 
@@ -243,7 +243,7 @@ difference = top_left_corrected - bottom_left_corrected;
 //Serial.print("\n");
 
 if (difference > 5 && difference < 15) {
-    //Serial.println("Weight");
+    Serial.println("Weight");
 }
 
 }
@@ -260,6 +260,26 @@ void read_proximity_sensors(void)
     limit_switch_right = digitalRead(LIMIT_SWITCH_RIGHT_PIN);
     prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
     prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
+
+
+
+    if (inductive_prox_sensor_right == 1) {
+            //##Stop robot##
+            setMotor(LEFT, STATIONARY, 0);
+            setMotor(RIGHT, STATIONARY, 0);
+            //##Change to pickup state##
+            program_state = PICKUP;
+        }
+      
+     if (inductive_prox_sensor_left == 1) {
+            //##Stop robot##
+            setMotor(LEFT, STATIONARY, 0);
+            setMotor(RIGHT, STATIONARY, 0);
+            //##Change to pickup state##
+            program_state = PICKUP;
+        }
+
+
     
     Serial.print(inductive_prox_sensor_left);
     Serial.print(" ");
@@ -284,13 +304,13 @@ void state_controller_task(void)
     switch(program_state) 
     {
         case SEARCHING:
-            static int rand_bit = random(0,1);
+            //static int rand_bit = random(0,1);
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
-                //blocked = 0;   
+                blocked = 0;   
                 setMotor(RIGHT, CLOCKWISE, 100);
                 setMotor(LEFT, CLOCKWISE, 100);
-            //} else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200 && IR_sensor_right_bottom >= 500 && IR_sensor_left_bottom >= 500 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
-              //      blocked = 1;
+            } else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200 && IR_sensor_right_bottom >= 500 && IR_sensor_left_bottom >= 500 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
+                blocked = 1;
             } else if (IR_sensor_right_bottom >= 500 && !blocked) { // When the right bottom sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);  
             } else if (IR_sensor_left_bottom >= 500 && !blocked) { // When the left bottom sensor is blocked
@@ -301,8 +321,8 @@ void state_controller_task(void)
                   turnRobot(CLOCKWISE, 100);
             } else if (IR_sensor_middle_top >= 50 && !blocked) { // When the middle top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            //} else if (blocked) { // While all front sensors are blocked
-                //  turnRobot(ANTICLOCKWISE, 100);
+            } else if (blocked) { // While all front sensors are blocked
+                turnRobot(ANTICLOCKWISE, 100);
             }
             break;
         case PICKUP:
