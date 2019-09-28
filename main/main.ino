@@ -42,7 +42,6 @@ o = stepper motors
 #include <math.h>
 
 
-
 //**********************************************************************************
 // Definitions
 //**********************************************************************************
@@ -99,10 +98,6 @@ int inductive_prox_sensor_right = 0;
 int limit_switch_right = 0;
 int prox_sensor_left = 0;
 int prox_sensor_right = 0;
-
-int weight_detected_left = 0;
-int weight_detected_right = 0;
-
 
 enum modes {SEARCHING, GOTO, PICKUP, FAKE, FINISHED};
 enum modes program_state = SEARCHING;
@@ -185,8 +180,8 @@ void setup()
     pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
     pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);  
 
-    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT);
-    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT);  
+    //pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT);
+    //pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT);  
 
     initCircBuff(&sensor1);
     initCircBuff(&sensor2);
@@ -246,8 +241,7 @@ difference_left = top_left_corrected - bottom_left_corrected;
 //Serial.print("\n");
 
 if (difference_left > 5 && difference_left < 15) {
-    Serial.println("Working");
-    weight_detected_left = 1;
+    //Serial.println("Working");
 }
 
 }
@@ -265,8 +259,6 @@ void read_proximity_sensors(void)
     prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
     prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
 
-
-
     if (inductive_prox_sensor_right == 1) {
             //##Stop robot##
             setMotor(LEFT, STATIONARY, 0);
@@ -275,24 +267,13 @@ void read_proximity_sensors(void)
             program_state = PICKUP;
         }
       
-     if (inductive_prox_sensor_left == 1) {
-            //##Stop robot##
-            setMotor(LEFT, STATIONARY, 0);
-            setMotor(RIGHT, STATIONARY, 0);
-            //##Change to pickup state##
-            program_state = PICKUP;
-        }
-
-
-    
-    //Serial.print(inductive_prox_sensor_left);
-    //Serial.print(" ");
-    //Serial.print(inductive_prox_sensor_right);
-    //Serial.print(" ");
-    //Serial.print(prox_sensor_left);
-    //Serial.print(" ");
-    //Serial.print(prox_sensor_right);
-    //Serial.print("\n");
+    if (inductive_prox_sensor_left == 1) {
+        //##Stop robot##
+        setMotor(LEFT, STATIONARY, 0);
+        setMotor(RIGHT, STATIONARY, 0);
+        //##Change to pickup state##
+        program_state = PICKUP;
+    }
 }
 
 
@@ -311,16 +292,11 @@ void state_controller_task(void)
         case SEARCHING:
             static int blocked;
             static int blocked2;
-            //Serial.print(random(0,2));
-
-
-
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
                 blocked = 0;
                 blocked2 = 0;
                 setMotor(RIGHT, CLOCKWISE, 100);
                 setMotor(LEFT, CLOCKWISE, 100);
-            
             } else if (blocked) { // While all front sensors are blocked
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
@@ -346,7 +322,6 @@ void state_controller_task(void)
                      blocked = 1;
                   }
             }
-           
             break;
         case PICKUP:
             switch(pickup_state)
