@@ -62,8 +62,8 @@ o = stepper motors
 #define LIMIT_SWITCH_LEFT_PIN                 39
 #define INDUCTIVE_PROX_SENSOR_RIGHT_PIN       21
 #define LIMIT_SWITCH_RIGHT_PIN                39
-#define PROX_SENSOR_LEFT_PIN                  42
-#define PROX_SENSOR_RIGHT_PIN                 22    //<<<<<<<<<<<<<<<was20
+#define PROX_SENSOR_LEFT_PIN                  43
+#define PROX_SENSOR_RIGHT_PIN                 42
 
 // Task scheduler tasks
 #define MS_READ_IR_TASK_PERIOD                2 // In ms. Also note 0 is the equivalent to the main loop
@@ -177,7 +177,6 @@ void setup()
     pinMode(SERVO_FRONT_PIN, OUTPUT);
 
     // Proximity sensors
-
     pinMode(LIMIT_SWITCH_LEFT_PIN, INPUT);  
     pinMode(LIMIT_SWITCH_RIGHT_PIN, INPUT);  
     pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
@@ -197,7 +196,7 @@ void setup()
     initLed();
     initMotors();
     taskInit();
-Serial.println("setup....exit");
+    Serial.println("setup....exit");
 }
 
 
@@ -252,9 +251,6 @@ if (difference > 5 && difference < 15) {
 
 void read_proximity_sensors(void) 
 {
-
-  int x,y;
-
     pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
     pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
   
@@ -268,6 +264,10 @@ void read_proximity_sensors(void)
     Serial.print(inductive_prox_sensor_left);
     Serial.print(" ");
     Serial.print(inductive_prox_sensor_right);
+    Serial.print(" ");
+    Serial.print(prox_sensor_left);
+    Serial.print(" ");
+    Serial.print(prox_sensor_right);
     Serial.print("\n");
 }
 
