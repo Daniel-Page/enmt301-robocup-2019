@@ -153,7 +153,7 @@ void taskInit() {
   //t_stepper_motor.enable();
   t_state_controller.enable();
   t_read_proximity_sensors.enable(); // ##########################
-  t_weight_detect.enable();
+  //t_weight_detect.enable();
 
 
  // Serial.println("Tasks have been initialised \n");
@@ -227,11 +227,11 @@ void weight_detect(void)
 {
 float top_left_corrected;
 float bottom_left_corrected;
-float difference;
+float difference_left;
 
 top_left_corrected = compute_distance_green(IR_sensor_left_top);
 bottom_left_corrected = compute_distance_brown(IR_sensor_left_bottom) + 7;
-difference = top_left_corrected - bottom_left_corrected;
+difference_left = top_left_corrected - bottom_left_corrected;
 
 //Serial.println(top_left_corrected - bottom_left_corrected);
 
@@ -241,8 +241,8 @@ difference = top_left_corrected - bottom_left_corrected;
 //Serial.print(compute_distance_brown(IR_sensor_left_bottom));
 //Serial.print("\n");
 
-if (difference > 5 && difference < 15) {
-    //Serial.println("Weight");
+if (difference_left > 5 && difference_left < 15) {
+    //Serial.println("Weight Left");
 }
 
 }
@@ -304,10 +304,34 @@ void state_controller_task(void)
     switch(program_state) 
     {
         case SEARCHING:
+
+
+        
+            float top_left_corrected;
+            float bottom_left_corrected;
+            float difference_left;
+            
+            top_left_corrected = compute_distance_green(IR_sensor_left_top);
+            bottom_left_corrected = compute_distance_brown(IR_sensor_left_bottom) + 7;
+            difference_left = top_left_corrected - bottom_left_corrected;
+
+            float top_right_corrected;
+            float bottom_right_corrected;
+            float difference_right;
+            
+            top_right_corrected = compute_distance_green(IR_sensor_right_top);
+            bottom_right_corrected = compute_distance_brown(IR_sensor_right_bottom) + 7;
+            difference_right = top_right_corrected - bottom_right_corrected;
+            
+        
             static int blocked;
             static int blocked2;
             Serial.print(random(0,2));
 
+
+if (difference_left > 5 && difference_left < 15) {
+    //Serial.println("Weight Left");
+}
 
             
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
@@ -326,6 +350,10 @@ void state_controller_task(void)
                   } else {
                      blocked = 1;
                   }
+            } else if (difference_left > 5 && difference_left < 15) {
+                   turnRobot(ANTICLOCKWISE, 100);
+            } else if (difference_left > 5 && difference_left < 15) {
+                   turnRobot(CLOCKWISE, 100);
             } else if (IR_sensor_right_bottom >= 500 && !blocked) { // When the right bottom sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_bottom >= 500 && !blocked) { // When the left bottom sensor is blocked
