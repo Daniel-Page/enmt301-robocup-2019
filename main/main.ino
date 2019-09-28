@@ -100,7 +100,6 @@ int limit_switch_right = 0;
 int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
-int blocked = 0;
 enum modes {SEARCHING, GOTO, PICKUP, FAKE, FINISHED};
 enum modes program_state = SEARCHING;
 
@@ -243,7 +242,7 @@ difference = top_left_corrected - bottom_left_corrected;
 //Serial.print("\n");
 
 if (difference > 5 && difference < 15) {
-    Serial.println("Weight");
+    //Serial.println("Weight");
 }
 
 }
@@ -281,14 +280,14 @@ void read_proximity_sensors(void)
 
 
     
-    Serial.print(inductive_prox_sensor_left);
-    Serial.print(" ");
-    Serial.print(inductive_prox_sensor_right);
-    Serial.print(" ");
-    Serial.print(prox_sensor_left);
-    Serial.print(" ");
-    Serial.print(prox_sensor_right);
-    Serial.print("\n");
+    //Serial.print(inductive_prox_sensor_left);
+    //Serial.print(" ");
+    //Serial.print(inductive_prox_sensor_right);
+    //Serial.print(" ");
+    //Serial.print(prox_sensor_left);
+    //Serial.print(" ");
+    //Serial.print(prox_sensor_right);
+    //Serial.print("\n");
 }
 
 
@@ -301,29 +300,48 @@ void stepper_motor_task(void)
 
 void state_controller_task(void)
 {
+    static int turn_count;
     switch(program_state) 
     {
         case SEARCHING:
-            //static int rand_bit = random(0,1);
+            static int blocked;
+            static int blocked2;
+            Serial.print(random(0,2));
+
+
+            
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
-                blocked = 0;   
+                blocked = 0;
+                blocked2 = 0;
                 setMotor(RIGHT, CLOCKWISE, 100);
                 setMotor(LEFT, CLOCKWISE, 100);
+            
+            } else if (blocked) { // While all front sensors are blocked
+                turnRobot(ANTICLOCKWISE, 100);
+            } else if (blocked2) {
+                turnRobot(CLOCKWISE, 100);
             } else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200 && IR_sensor_right_bottom >= 500 && IR_sensor_left_bottom >= 500 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
-                blocked = 1;
+                  if (random(0,2)) {
+                     blocked2 = 1;
+                  } else {
+                     blocked = 1;
+                  }
             } else if (IR_sensor_right_bottom >= 500 && !blocked) { // When the right bottom sensor is blocked
-                  turnRobot(ANTICLOCKWISE, 100);  
+                  turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_bottom >= 500 && !blocked) { // When the left bottom sensor is blocked
-                  turnRobot(ANTICLOCKWISE, 100);                        
+                  turnRobot(ANTICLOCKWISE, 100);                       
             } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
             } else if (IR_sensor_middle_top >= 50 && !blocked) { // When the middle top sensor is blocked
-                  turnRobot(CLOCKWISE, 100);
-            } else if (blocked) { // While all front sensors are blocked
-                turnRobot(ANTICLOCKWISE, 100);
+                  if (random(0,2)) {
+                     blocked2 = 1;
+                  } else {
+                     blocked = 1;
+                  }
             }
+           
             break;
         case PICKUP:
             switch(pickup_state)
