@@ -183,6 +183,7 @@ void read_proximity_sensors_left()
 
     if (prox_counter_left == 200) {
         program_state = FAKE;
+        prox_counter_left = 0;
     } else if (inductive_prox_sensor_left == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
@@ -190,7 +191,6 @@ void read_proximity_sensors_left()
         pickup_state = LOWERING_LEFT;
         prox_counter_left = 0;
     } else if (prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
-        Serial.print("********");
         prox_counter_left++;
     }
 }
@@ -211,6 +211,7 @@ void read_proximity_sensors_right()
 
     if (prox_counter_right == 200) {
         program_state = FAKE;
+        prox_counter_right = 0;
     } else if (inductive_prox_sensor_right == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);        
@@ -324,7 +325,6 @@ void state_controller_task()
                 setMotor(RIGHT, ANTICLOCKWISE, 75);
                 setMotor(LEFT, ANTICLOCKWISE, 75);
                 reverse_count++;
-
             }
      
             break;
