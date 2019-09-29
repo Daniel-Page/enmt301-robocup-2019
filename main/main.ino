@@ -55,9 +55,7 @@ o = stepper motors
 #define LOAD_CELL_RIGHT_1_PIN                    46
 #define LOAD_CELL_RIGHT_2_PIN                    47
 #define INDUCTIVE_PROX_SENSOR_LEFT_PIN           21
-#define LIMIT_SWITCH_LEFT_PIN                    39
 #define INDUCTIVE_PROX_SENSOR_RIGHT_PIN          20
-#define LIMIT_SWITCH_RIGHT_PIN                   39
 #define PROX_SENSOR_LEFT_PIN                     43
 #define PROX_SENSOR_RIGHT_PIN                    42
 
@@ -68,13 +66,16 @@ o = stepper motors
 #define MS_READ_IR_TASK_PERIOD                   2 // In ms. Also note 0 is the equivalent to the main loop
 #define MS_LED_TASK_PERIOD                       2000
 #define MS_STATE_CONTROLLER_TASK_PERIOD          1
-#define MS_READ_PROXIMITY_TASK_PERIOD            3
+#define MS_READ_PROXIMITY_LEFT_TASK_PERIOD       3
+#define MS_READ_PROXIMITY_RIGHT_TASK_PERIOD      3
 
 
 #define MS_READ_IR_TASK_NUM_EXECUTE             -1 // -1 means infinite
 #define MS_LED_TASK_NUM_EXECUTE                 -1
 #define MS_STATE_CONTROLLER_TASK_NUM_EXECUTE    -1
-#define MS_READ_PROXIMITY_NUM_EXECUTE           -1
+#define MS_READ_PROXIMITY_LEFT_NUM_EXECUTE      -1
+#define MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE     -1
+
 
 
 //**********************************************************************************
@@ -114,13 +115,15 @@ circBuffer sensor6;
 
 void read_IR_sensors();
 void state_controller_task();
-void read_proximity_sensors();
+void read_proximity_sensors_left();
+void read_proximity_sensors_right();
 void taskInit();
 
 
 Task t_read_IR_sensors(MS_READ_IR_TASK_PERIOD, MS_READ_IR_TASK_NUM_EXECUTE, &read_IR_sensors);
 Task t_state_controller(MS_STATE_CONTROLLER_TASK_PERIOD, MS_STATE_CONTROLLER_TASK_NUM_EXECUTE, &state_controller_task);
-Task t_read_proximity_sensors(MS_READ_PROXIMITY_TASK_PERIOD, MS_READ_PROXIMITY_NUM_EXECUTE, &read_proximity_sensors);
+Task t_read_proximity_sensors_left(MS_READ_PROXIMITY_LEFT_TASK_PERIOD, MS_READ_PROXIMITY_LEFT_NUM_EXECUTE, &read_proximity_sensors_left);
+Task t_read_proximity_sensors_right(MS_READ_PROXIMITY_RIGHT_TASK_PERIOD, MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE, &read_proximity_sensors_right);
 
 
 Scheduler taskManager;
@@ -132,10 +135,8 @@ void setup()
     Serial.println("Setup Start");
 
     // Proximity sensors
-    pinMode(LIMIT_SWITCH_LEFT_PIN, INPUT);  
-    pinMode(LIMIT_SWITCH_RIGHT_PIN, INPUT);  
-    pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
-    pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);  
+    //pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
+    //pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);  
 
     //pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
     //pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);  
@@ -168,38 +169,59 @@ void read_IR_sensors()
 }
 
 
-void read_proximity_sensors() 
+void read_proximity_sensors_left() 
 {
+    static int is_prox_counting_left = 0;
+    static int prox_counter_left = 0;
     static int pick_up_left_status = 0;
-    static int pick_up_right_status = 0;
-    
+
     pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
-    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
+    pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
   
     inductive_prox_sensor_left = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_PIN);
-    limit_switch_left = digitalRead(LIMIT_SWITCH_LEFT_PIN);
-    inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
-    limit_switch_right = digitalRead(LIMIT_SWITCH_RIGHT_PIN);
     prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
-    prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
 
-    if (pick_up_left_status == 0 && inductive_prox_sensor_left == 1) {
+    if (prox_counter_left == 200) {
+        program_state = FINISHED;
+    } else if (pick_up_left_status == 0 && inductive_prox_sensor_left == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
         program_state = PICKUP;
         pickup_state = LOWERING_LEFT;
-        pick_up_left_status = 1;
+        pick_up_left_status = 0;
+        t_read_proximity_sensors_left.disable();
+    } else if (prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
+        Serial.print("********");
+        prox_counter_left++;
+    }
+}
+
+
+void read_proximity_sensors_right() 
+{
+    static int is_prox_counting_right = 0;
+    static int prox_counter_right = 0;
+    static int pick_up_right_status = 0;
+    
+    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
+    pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);
+  
+    inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
+    prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
+
+
+    if (prox_counter_right == 200) {
+        program_state = FINISHED;
     } else if (pick_up_right_status == 0 && inductive_prox_sensor_right == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);        
         program_state = PICKUP;
         pickup_state = LOWERING_RIGHT;
-        pick_up_right_status = 1;
-    }// else if (prox_sensor_left == 0) {
-       // program_state = FAKE;
-    //} else if (prox_sensor_right == 0) {
-      //  program_state = FAKE;
-   // }
+        pick_up_right_status = 0;
+        t_read_proximity_sensors_right.disable();
+    } else if (prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
+        prox_counter_right++;
+    }
   
 }
 
@@ -267,6 +289,7 @@ void state_controller_task()
                         step_count_left++;
                     } else {
                         weight_count++;
+                        //t_read_proximity_sensors.enable();
                         program_state = SEARCHING;
                     }
                     break;
@@ -285,6 +308,7 @@ void state_controller_task()
                         step_count_right++;
                     } else {
                         weight_count++;
+                        //t_read_proximity_sensors.enable();
                         program_state = SEARCHING;
                     }
                     break;
@@ -295,6 +319,8 @@ void state_controller_task()
             Serial.println("Fake weight detected");
             break;
         case FINISHED:
+            setMotor(LEFT, STATIONARY, 0);
+            setMotor(RIGHT, STATIONARY, 0);
             Serial.println("Two weights collected");
             break;
      
@@ -310,12 +336,16 @@ void taskInit()
     // Add tasks to the scheduler
     taskManager.addTask(t_read_IR_sensors);
     taskManager.addTask(t_state_controller);
-    taskManager.addTask(t_read_proximity_sensors);
+    taskManager.addTask(t_read_proximity_sensors_left);
+    taskManager.addTask(t_read_proximity_sensors_right);
+
     
     // Enable the tasks
     t_read_IR_sensors.enable();
     t_state_controller.enable();
-    t_read_proximity_sensors.enable();
+    t_read_proximity_sensors_left.enable();
+    t_read_proximity_sensors_right.enable();
+
     
     Serial.println("Tasks initialised");
 }
