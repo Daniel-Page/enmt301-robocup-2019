@@ -94,7 +94,7 @@ int limit_switch_right = 0;
 int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
-enum modes {SEARCHING, PICKUP, FAKE, STATIC};
+enum modes {SEARCHING, PICKUP, FAKE, FINISHED};
 enum modes program_state = SEARCHING;
 
 enum pickup_modes {INACTIVE, LOWERING_LEFT, RAISING_LEFT, LOWERING_RIGHT, RAISING_RIGHT};
@@ -172,7 +172,7 @@ void read_proximity_sensors()
 {
     static int pick_up_left_status = 0;
     static int pick_up_right_status = 0;
-
+    
     pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
     pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
   
@@ -189,7 +189,7 @@ void read_proximity_sensors()
         program_state = PICKUP;
         pickup_state = LOWERING_LEFT;
         pick_up_left_status = 1;
-    } else if (pick_up_left_status == 1 && inductive_prox_sensor_right == 1) {
+    } else if (pick_up_right_status == 0 && inductive_prox_sensor_right == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);        
         program_state = PICKUP;
@@ -206,9 +206,12 @@ void read_proximity_sensors()
 
 void state_controller_task()
 {
-    static int turn_count;
+    static int weight_count = 0;
+    if (weight_count == 2) {
+        program_state = FINISHED;
+    }
     switch(program_state) 
-    {   
+    {
         case SEARCHING:
             static int blocked;
             static int blocked2;
@@ -221,7 +224,7 @@ void state_controller_task()
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
                 turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_middle_top >= 50 && !blocked) { // When the middle top sensor is blocked
+            } else if (IR_sensor_middle_top >= 110 && !blocked) { // When the middle top sensor is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
                   } else {
@@ -233,13 +236,13 @@ void state_controller_task()
                   } else {
                      blocked = 1;
                   }
-            } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right top sensor is blocked
+            } else if (IR_sensor_right_top >= 100 && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
-            } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left top sensor is blocked
+            } else if (IR_sensor_left_top >= 100 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 200 && !blocked) { // When the right bottom sensor is blocked
+            } else if (IR_sensor_right_bottom >= 110 && !blocked) { // When the right bottom sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_left_bottom >= 200 && !blocked) { // When the left bottom sensor is blocked
+            } else if (IR_sensor_left_bottom >= 110 && !blocked) { // When the left bottom sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);                       
             }
             break;
@@ -263,6 +266,7 @@ void state_controller_task()
                         stepper_motor_step(LEFT, ANTICLOCKWISE);
                         step_count_left++;
                     } else {
+                        weight_count++;
                         program_state = SEARCHING;
                     }
                     break;
@@ -280,15 +284,20 @@ void state_controller_task()
                         stepper_motor_step(RIGHT, ANTICLOCKWISE);
                         step_count_right++;
                     } else {
+                        weight_count++;
                         program_state = SEARCHING;
                     }
                     break;
+                   
             }
             break;
         case FAKE:
             Serial.println("Fake weight detected");
             break;
-               
+        case FINISHED:
+            Serial.println("Two weights collected");
+            break;
+     
     }
 }
     
