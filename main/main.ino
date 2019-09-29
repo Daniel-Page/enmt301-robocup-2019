@@ -77,6 +77,7 @@ o = stepper motors
 #define MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE     -1
 
 
+
 //**********************************************************************************
 // Variables
 //**********************************************************************************
@@ -182,16 +183,14 @@ void read_proximity_sensors_left()
 
     if (prox_counter_left == 200) {
         program_state = FAKE;
-        prox_counter_left = 0;
     } else if (inductive_prox_sensor_left == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
         program_state = PICKUP;
         pickup_state = LOWERING_LEFT;
         prox_counter_left = 0;
-        +t_read_proximity_sensors_left.disable();
-
     } else if (prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
+        Serial.print("********");
         prox_counter_left++;
     }
 }
@@ -212,14 +211,12 @@ void read_proximity_sensors_right()
 
     if (prox_counter_right == 200) {
         program_state = FAKE;
-        prox_counter_right = 0;
     } else if (inductive_prox_sensor_right == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);        
         program_state = PICKUP;
         pickup_state = LOWERING_RIGHT;
         prox_counter_right = 0;
-        t_read_proximity_sensors_right.disable();
     } else if (prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
         prox_counter_right++;
     }
@@ -326,6 +323,7 @@ void state_controller_task()
                 setMotor(RIGHT, ANTICLOCKWISE, 75);
                 setMotor(LEFT, ANTICLOCKWISE, 75);
                 reverse_count++;
+
             }
      
             break;
