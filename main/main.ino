@@ -77,7 +77,6 @@ o = stepper motors
 #define MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE     -1
 
 
-
 //**********************************************************************************
 // Variables
 //**********************************************************************************
@@ -190,6 +189,8 @@ void read_proximity_sensors_left()
         program_state = PICKUP;
         pickup_state = LOWERING_LEFT;
         prox_counter_left = 0;
+        +t_read_proximity_sensors_left.disable();
+
     } else if (prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
         prox_counter_left++;
     }
