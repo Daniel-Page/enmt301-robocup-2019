@@ -175,6 +175,7 @@ void read_proximity_sensors_left()
     static int prox_counter_left = 0;
     static int pick_up_left_status = 0;
 
+
     pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
     pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
   
@@ -183,14 +184,15 @@ void read_proximity_sensors_left()
 
     if (prox_counter_left == 200) {
         program_state = FAKE;
-    } else if (inductive_prox_sensor_left == 1) {
+        prox_counter_left = 0;
+    } else if (pick_up_left_status == 0 && inductive_prox_sensor_left == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
         program_state = PICKUP;
         pickup_state = LOWERING_LEFT;
         prox_counter_left = 0;
+        pick_up_left_status = 1;
     } else if (prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
-        Serial.print("********");
         prox_counter_left++;
     }
 }
@@ -201,6 +203,7 @@ void read_proximity_sensors_right()
     static int is_prox_counting_right = 0;
     static int prox_counter_right = 0;
     static int pick_up_right_status = 0;
+
     
     pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
     pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);
@@ -208,15 +211,16 @@ void read_proximity_sensors_right()
     inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
     prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
 
-
     if (prox_counter_right == 200) {
         program_state = FAKE;
-    } else if (inductive_prox_sensor_right == 1) {
+        prox_counter_right = 0;
+    } else if (pick_up_right_status == 0 && inductive_prox_sensor_right == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);        
         program_state = PICKUP;
         pickup_state = LOWERING_RIGHT;
         prox_counter_right = 0;
+        pick_up_right_status = 1;
     } else if (prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
         prox_counter_right++;
     }
@@ -315,15 +319,16 @@ void state_controller_task()
             break;
         case FAKE:
             static int reverse_count = 0;
-            
-            if (reverse_count > 300) {
-                program_state = SEARCHING;
+            if (reverse_count > 1300) {
                 reverse_count = 0;
+                program_state = SEARCHING;
+            } else if (reverse_count > 800) {
+                turnRobot(ANTICLOCKWISE, 100);                       
+                reverse_count++;
             } else {
                 setMotor(RIGHT, ANTICLOCKWISE, 75);
                 setMotor(LEFT, ANTICLOCKWISE, 75);
                 reverse_count++;
-
             }
      
             break;
