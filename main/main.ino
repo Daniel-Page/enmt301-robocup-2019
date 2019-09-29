@@ -182,14 +182,13 @@ void read_proximity_sensors_left()
     prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
 
     if (prox_counter_left == 200) {
-        program_state = FINISHED;
-    } else if (pick_up_left_status == 0 && inductive_prox_sensor_left == 1) {
+        program_state = FAKE;
+    } else if (inductive_prox_sensor_left == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
         program_state = PICKUP;
         pickup_state = LOWERING_LEFT;
-        pick_up_left_status = 0;
-        t_read_proximity_sensors_left.disable();
+        prox_counter_left = 0;
     } else if (prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
         Serial.print("********");
         prox_counter_left++;
@@ -211,13 +210,13 @@ void read_proximity_sensors_right()
 
 
     if (prox_counter_right == 200) {
-        program_state = FINISHED;
-    } else if (pick_up_right_status == 0 && inductive_prox_sensor_right == 1) {
+        program_state = FAKE;
+    } else if (inductive_prox_sensor_right == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);        
         program_state = PICKUP;
         pickup_state = LOWERING_RIGHT;
-        pick_up_right_status = 0;
+        prox_counter_right = 0;
         t_read_proximity_sensors_right.disable();
     } else if (prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
         prox_counter_right++;
@@ -316,7 +315,18 @@ void state_controller_task()
             }
             break;
         case FAKE:
-            Serial.println("Fake weight detected");
+            static int reverse_count = 0;
+            
+            if (reverse_count > 300) {
+                program_state = SEARCHING;
+                reverse_count = 0;
+            } else {
+                setMotor(RIGHT, ANTICLOCKWISE, 75);
+                setMotor(LEFT, ANTICLOCKWISE, 75);
+                reverse_count++;
+
+            }
+     
             break;
         case FINISHED:
             setMotor(LEFT, STATIONARY, 0);
