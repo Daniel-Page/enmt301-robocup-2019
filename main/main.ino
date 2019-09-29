@@ -54,12 +54,15 @@ o = stepper motors
 #define LOAD_CELL_LEFT_2_PIN                     45
 #define LOAD_CELL_RIGHT_1_PIN                    46
 #define LOAD_CELL_RIGHT_2_PIN                    47
-#define INDUCTIVE_PROX_SENSOR_LEFT_PIN           20
+#define INDUCTIVE_PROX_SENSOR_LEFT_PIN           21
 #define LIMIT_SWITCH_LEFT_PIN                    39
-#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN          21
+#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN          20
 #define LIMIT_SWITCH_RIGHT_PIN                   39
 #define PROX_SENSOR_LEFT_PIN                     43
 #define PROX_SENSOR_RIGHT_PIN                    42
+
+#define STEPPER_MOTOR_LOWERING_STEPS             3300
+#define STEPPER_MOTOR_RAISING_STEPS              2900
 
 // Task scheduler tasks
 #define MS_READ_IR_TASK_PERIOD                   2 // In ms. Also note 0 is the equivalent to the main loop
@@ -167,6 +170,9 @@ void read_IR_sensors()
 
 void read_proximity_sensors() 
 {
+    static int pick_up_left_status = 0;
+    static int pick_up_right_status = 0;
+
     pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
     pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
   
@@ -177,16 +183,18 @@ void read_proximity_sensors()
     prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
     prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
 
-    if (inductive_prox_sensor_left == 1) {
+    if (pick_up_left_status == 0 && inductive_prox_sensor_left == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);
         program_state = PICKUP;
         pickup_state = LOWERING_LEFT;
-    } else if (inductive_prox_sensor_right == 1) {
+        pick_up_left_status = 1;
+    } else if (pick_up_left_status == 1 && inductive_prox_sensor_right == 1) {
         setMotor(LEFT, STATIONARY, 0);
         setMotor(RIGHT, STATIONARY, 0);        
         program_state = PICKUP;
         pickup_state = LOWERING_RIGHT;
+        pick_up_right_status = 1;
     }// else if (prox_sensor_left == 0) {
        // program_state = FAKE;
     //} else if (prox_sensor_right == 0) {
@@ -242,16 +250,16 @@ void state_controller_task()
             switch(pickup_state)
             {
                 case LOWERING_LEFT:
-                    if (step_count_left < 400) {
+                    if (step_count_left < STEPPER_MOTOR_LOWERING_STEPS) {
                         stepper_motor_step(LEFT, CLOCKWISE);
                         step_count_left++;
                     } else {
-                        step_count_left = 50;
+                        step_count_left = STEPPER_MOTOR_LOWERING_STEPS - STEPPER_MOTOR_RAISING_STEPS;
                         pickup_state = RAISING_LEFT;
                     }
                     break;
                 case RAISING_LEFT:
-                    if (step_count_left < 400) {
+                    if (step_count_left < STEPPER_MOTOR_LOWERING_STEPS) {
                         stepper_motor_step(LEFT, ANTICLOCKWISE);
                         step_count_left++;
                     } else {
@@ -259,16 +267,16 @@ void state_controller_task()
                     }
                     break;
                 case LOWERING_RIGHT:
-                    if (step_count_right < 400) {
+                    if (step_count_right < STEPPER_MOTOR_LOWERING_STEPS) {
                         stepper_motor_step(RIGHT, CLOCKWISE);
                         step_count_right++;
                     } else {
-                        step_count_right = 50;
+                        step_count_right = STEPPER_MOTOR_LOWERING_STEPS - STEPPER_MOTOR_RAISING_STEPS;
                         pickup_state = RAISING_RIGHT;
                     }
                     break;
                 case RAISING_RIGHT:
-                    if (step_count_right < 400) {
+                    if (step_count_right < STEPPER_MOTOR_LOWERING_STEPS) {
                         stepper_motor_step(RIGHT, ANTICLOCKWISE);
                         step_count_right++;
                     } else {
