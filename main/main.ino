@@ -54,13 +54,13 @@ o = stepper motors
 #define LOAD_CELL_LEFT_2_PIN                     45
 #define LOAD_CELL_RIGHT_1_PIN                    46
 #define LOAD_CELL_RIGHT_2_PIN                    47
-#define INDUCTIVE_PROX_SENSOR_LEFT_PIN           21
-#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN          20
+#define INDUCTIVE_PROX_SENSOR_LEFT_PIN           20
+#define INDUCTIVE_PROX_SENSOR_RIGHT_PIN          21
 #define PROX_SENSOR_LEFT_PIN                     43
 #define PROX_SENSOR_RIGHT_PIN                    42
 
-#define STEPPER_MOTOR_LOWERING_STEPS             3300
-#define STEPPER_MOTOR_RAISING_STEPS              2900
+#define STEPPER_MOTOR_LOWERING_STEPS             3250
+#define STEPPER_MOTOR_RAISING_STEPS              2850
 
 // Task scheduler tasks
 #define MS_READ_IR_TASK_PERIOD                   2 // In ms. Also note 0 is the equivalent to the main loop
@@ -170,61 +170,74 @@ void read_IR_sensors()
 
 
 void read_proximity_sensors_left() 
-{
-    static int is_prox_counting_left = 0;
-    static int prox_counter_left = 0;
-    static int pick_up_left_status = 0;
+{   
+        static int is_prox_counting_left = 0;
+        static int prox_counter_left = 0;
+        static int pick_up_left_status = 0;
+    
+        
+        
+    
+        pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
+        pinMode(PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);  
+      
+        inductive_prox_sensor_left = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_PIN);
+        prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
 
-
-    pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
-    pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
-  
-    inductive_prox_sensor_left = digitalRead(INDUCTIVE_PROX_SENSOR_LEFT_PIN);
-    prox_sensor_left = digitalRead(PROX_SENSOR_LEFT_PIN);
-
-    if (prox_counter_left == 200) {
-        program_state = FAKE;
-        prox_counter_left = 0;
-    } else if (pick_up_left_status == 0 && inductive_prox_sensor_left == 1) {
-        setMotor(LEFT, STATIONARY, 0);
-        setMotor(RIGHT, STATIONARY, 0);
-        program_state = PICKUP;
-        pickup_state = LOWERING_LEFT;
-        prox_counter_left = 0;
-        pick_up_left_status = 1;
-    } else if (prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
-        prox_counter_left++;
-    }
+            if (pick_up_left_status == 0 && inductive_prox_sensor_left == 1) {
+                pick_up_left_status = 1;
+                setMotor(LEFT, STATIONARY, 0);
+                setMotor(RIGHT, STATIONARY, 0);
+                program_state = PICKUP;
+                pickup_state = LOWERING_LEFT;
+                prox_counter_left = 0;
+    
+            } else if (pick_up_left_status == 0 && prox_counter_left > 200) {
+                    program_state = FAKE;
+                    prox_counter_left = 0;
+                    Serial.println(prox_counter_left);
+                    Serial.println(pick_up_left_status);
+                
+            } else if (pick_up_left_status == 0 && prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
+                prox_counter_left++;
+            }
+   
+    
+    
 }
 
 
 void read_proximity_sensors_right() 
 {
-    static int is_prox_counting_right = 0;
-    static int prox_counter_right = 0;
-    static int pick_up_right_status = 0;
-
+    if (program_state == SEARCHING) {
+        static int is_prox_counting_right = 0;
+        static int prox_counter_right = 0;
+        static int pick_up_right_status = 0;
     
-    pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
-    pinMode(PROX_SENSOR_RIGHT_PIN, INPUT);
-  
-    inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
-    prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
+        
+        pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
+        pinMode(PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
+      
+        inductive_prox_sensor_right = digitalRead(INDUCTIVE_PROX_SENSOR_RIGHT_PIN);
+        prox_sensor_right = digitalRead(PROX_SENSOR_RIGHT_PIN);
+            
+        if (pick_up_right_status == 0 && inductive_prox_sensor_right == 1) {
+            setMotor(LEFT, STATIONARY, 0);
+            setMotor(RIGHT, STATIONARY, 0);        
+            program_state = PICKUP;
+            pickup_state = LOWERING_RIGHT;
+            prox_counter_right = 0;
+            pick_up_right_status = 1;
 
-    if (prox_counter_right == 200) {
-        program_state = FAKE;
-        prox_counter_right = 0;
-    } else if (pick_up_right_status == 0 && inductive_prox_sensor_right == 1) {
-        setMotor(LEFT, STATIONARY, 0);
-        setMotor(RIGHT, STATIONARY, 0);        
-        program_state = PICKUP;
-        pickup_state = LOWERING_RIGHT;
-        prox_counter_right = 0;
-        pick_up_right_status = 1;
-    } else if (prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
-        prox_counter_right++;
+        } else if (pick_up_right_status == 0 && prox_counter_right == 200) {
+                    program_state = FAKE;
+                    prox_counter_right = 0;
+                    
+
+        } else if (pick_up_right_status == 0 && prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
+            prox_counter_right++;
+        }
     }
-  
 }
 
 
@@ -248,7 +261,7 @@ void state_controller_task()
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
                 turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_middle_top >= 110 && !blocked) { // When the middle top sensor is blocked
+            } else if (IR_sensor_middle_top >= 50 && !blocked) { // When the middle top sensor is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
                   } else {
@@ -260,13 +273,13 @@ void state_controller_task()
                   } else {
                      blocked = 1;
                   }
-            } else if (IR_sensor_right_top >= 100 && !blocked) { // When the right top sensor is blocked
+            } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
-            } else if (IR_sensor_left_top >= 100 && !blocked) { // When the left top sensor is blocked
+            } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 110 && !blocked) { // When the right bottom sensor is blocked
+            } else if (IR_sensor_right_bottom >= 200 && !blocked) { // When the right bottom sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_left_bottom >= 110 && !blocked) { // When the left bottom sensor is blocked
+            } else if (IR_sensor_left_bottom >= 200 && !blocked) { // When the left bottom sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);                       
             }
             break;
@@ -291,7 +304,7 @@ void state_controller_task()
                         step_count_left++;
                     } else {
                         weight_count++;
-                        //t_read_proximity_sensors.enable();
+                        pickup_state = INACTIVE;
                         program_state = SEARCHING;
                     }
                     break;
@@ -310,7 +323,7 @@ void state_controller_task()
                         step_count_right++;
                     } else {
                         weight_count++;
-                        //t_read_proximity_sensors.enable();
+                        pickup_state = INACTIVE;
                         program_state = SEARCHING;
                     }
                     break;
@@ -329,6 +342,7 @@ void state_controller_task()
                 setMotor(RIGHT, ANTICLOCKWISE, 75);
                 setMotor(LEFT, ANTICLOCKWISE, 75);
                 reverse_count++;
+                
             }
      
             break;

@@ -28,10 +28,10 @@ Developed by Sasha Cox, Dervla Braem & Daniel Page
 //**********************************************************************************
 #define SERVO_LEFT_PIN                  13 // The pins can be switched for different orientations of the robot
 #define SERVO_RIGHT_PIN                 12
-#define STEPPER_MOTOR_LEFT_DIR_PIN      33
-#define STEPPER_MOTOR_LEFT_STEP_PIN     32
-#define STEPPER_MOTOR_RIGHT_DIR_PIN     31
-#define STEPPER_MOTOR_RIGHT_STEP_PIN    30
+#define STEPPER_MOTOR_LEFT_DIR_PIN      31
+#define STEPPER_MOTOR_LEFT_STEP_PIN     30
+#define STEPPER_MOTOR_RIGHT_DIR_PIN     33
+#define STEPPER_MOTOR_RIGHT_STEP_PIN    32
 
 
 //**********************************************************************************
