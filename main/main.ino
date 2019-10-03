@@ -256,13 +256,17 @@ void state_controller_task()
             static int blocked;
             static int blocked2;
             static int suspend_turn;
-            
+            static int weight_detected_left;
+            static int weight_detected_right;
+
             // All of the sensors are clear
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
                 if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
                     suspend_turn = 0;
+                    weight_detected_left = 0;
+                    weight_detected_right = 0;
                     setMotor(RIGHT, CLOCKWISE, 100);
                     setMotor(LEFT, CLOCKWISE, 100);
                 } else {
@@ -290,10 +294,12 @@ void state_controller_task()
                   turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_top >= 100 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 150 && !blocked) { // When the right bottom sensor is blocked turns towards weight
-                  turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_left_bottom >= 150 && !blocked) { // When the left bottom sensor is blocked turn towards weight
-                  turnRobot(ANTICLOCKWISE, 100);
+            } else if ((weight_detected_right > 1 && weight_detected_right < 200) || (IR_sensor_right_bottom >= 150 && !blocked)) { // When the right bottom sensor is blocked turns towards weight
+                  turnRobot(CLOCKWISE, 75);
+                  weight_detected_right++;
+            } else if ((weight_detected_left > 1 && weight_detected_left < 200) || (IR_sensor_left_bottom >= 150 && !blocked)) { // When the left bottom sensor is blocked turn towards weight
+                  turnRobot(ANTICLOCKWISE, 75);
+                  weight_detected_left++;
             }
             break;
             
