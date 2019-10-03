@@ -274,7 +274,7 @@ void state_controller_task()
                   } else {
                      blocked = 1;
                   }
-            } else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200 && IR_sensor_right_bottom >= 500 && IR_sensor_left_bottom >= 500 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
+            } else if (IR_sensor_right_top >= 100 && IR_sensor_left_top >= 100 && IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
                   // Everything is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
@@ -282,13 +282,13 @@ void state_controller_task()
                      blocked = 1;
                   }
                   suspend_turn = 1;
-            } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right top sensor is blocked
+            } else if (IR_sensor_right_top >= 100  && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
-            } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left top sensor is blocked
+            } else if (IR_sensor_left_top >= 100 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 200 && !blocked) { // When the right bottom sensor is blocked
+            } else if (IR_sensor_right_bottom >= 150 && !blocked) { // When the right bottom sensor is blocked turns towards weight
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_left_bottom >= 200 && !blocked) { // When the left bottom sensor is blocked
+            } else if (IR_sensor_left_bottom >= 150 && !blocked) { // When the left bottom sensor is blocked turn towards weight
                   turnRobot(ANTICLOCKWISE, 100);
             }
             break;
@@ -394,14 +394,12 @@ void taskInit()
     taskManager.addTask(t_read_proximity_sensors_left);
     taskManager.addTask(t_read_proximity_sensors_right);
 
-    
     // Enable the tasks
     t_read_IR_sensors.enable();
     t_state_controller.enable();
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
 
-    
     Serial.println("Tasks initialised");
 }
 
