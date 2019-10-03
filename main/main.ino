@@ -159,6 +159,7 @@ void setup()
     taskInit();
 
     wdt_enable(WDTO_8S); // Watchdog timer set to trigger after 2 seconds if not reset
+    
     Serial.println("Setup Finish");
 }
 
@@ -256,8 +257,7 @@ void state_controller_task()
             static int blocked;
             static int blocked2;
             static int suspend_turn;
-            static int weight_detected_left;
-            static int weight_detected_right;
+            static int weight_collection_timeout = 0;
 
             // All of the sensors are clear
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
@@ -265,8 +265,6 @@ void state_controller_task()
                     blocked = 0;
                     blocked2 = 0;
                     suspend_turn = 0;
-                    weight_detected_left = 0;
-                    weight_detected_right = 0;
                     setMotor(RIGHT, CLOCKWISE, 100);
                     setMotor(LEFT, CLOCKWISE, 100);
                 } else {
@@ -294,12 +292,12 @@ void state_controller_task()
                   turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_top >= 100 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if ((weight_detected_right > 1 && weight_detected_right < 200) || (IR_sensor_right_bottom >= 150 && !blocked)) { // When the right bottom sensor is blocked turns towards weight
+            } else if (IR_sensor_right_bottom >= 150 && IR_sensor_left_bottom >= 150 && !blocked) {
+                  program_state = FAKE;
+            } else if (IR_sensor_right_bottom >= 150 && !blocked) { // When the right bottom sensor is blocked turns towards weight
                   turnRobot(CLOCKWISE, 75);
-                  weight_detected_right++;
-            } else if ((weight_detected_left > 1 && weight_detected_left < 200) || (IR_sensor_left_bottom >= 150 && !blocked)) { // When the left bottom sensor is blocked turn towards weight
+            } else if (IR_sensor_left_bottom >= 150 && !blocked) { // When the left bottom sensor is blocked turn towards weight
                   turnRobot(ANTICLOCKWISE, 75);
-                  weight_detected_left++;
             }
             break;
             
@@ -323,7 +321,6 @@ void state_controller_task()
                         step_count_left++;
                     } else {
                         weight_count++;
-                        pickup_state = INACTIVE;
                         program_state = SEARCHING;
                     }
                     break;
@@ -342,7 +339,6 @@ void state_controller_task()
                         step_count_right++;
                     } else {
                         weight_count++;
-                        pickup_state = INACTIVE;
                         program_state = SEARCHING;
                     }
                     break;
@@ -368,9 +364,9 @@ void state_controller_task()
                     }
                     lock_flag = 1;
                 }
-                if (turning_direction == 1) {
+                if (turning_direction == 0) {
                     turnRobot(ANTICLOCKWISE, 100);                       
-                } else if (turning_direction == 2) {
+                } else if (turning_direction == 1) {
                     turnRobot(CLOCKWISE, 100);
                 }
                 reverse_count++;
@@ -409,11 +405,11 @@ void taskInit()
 
     // Enable the tasks
     t_read_IR_sensors.enable();
-    t_state_controller.enable();
+    //t_state_controller.enable();
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
     t_watchdog.enable();
-    t_play_tune.enable();
+    //t_play_tune.enable();
 
     Serial.println("Tasks initialised");
 }

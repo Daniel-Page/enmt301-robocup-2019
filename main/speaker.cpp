@@ -12,7 +12,7 @@
 #include "src/protothreads/timer.h"
 #include <Arduino.h>
 // Set this to be the pin that your buzzer resides in. (Note that you can only have one buzzer actively using the PWM signal at a time).
-int tonePin = A9;
+int tonePin = 38;
 boolean enablePtreplaceMe594744 = true;
 
 static struct pt ptreplaceMe594744;
