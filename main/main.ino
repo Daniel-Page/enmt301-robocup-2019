@@ -69,7 +69,7 @@ o = stepper motors
 #define MS_READ_PROXIMITY_LEFT_TASK_PERIOD       3
 #define MS_READ_PROXIMITY_RIGHT_TASK_PERIOD      3
 #define MS_WATCHDOG_TASK_PERIOD                  100
-
+#define MS_PLAY_TUNE_PERIOD                      0
 
 #define MS_READ_IR_TASK_NUM_EXECUTE             -1 // -1 means infinite
 #define MS_LED_TASK_NUM_EXECUTE                 -1
@@ -77,6 +77,7 @@ o = stepper motors
 #define MS_READ_PROXIMITY_LEFT_NUM_EXECUTE      -1
 #define MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE     -1
 #define MS_WATCHDOG_NUM_EXECUTE                 -1
+#define MS_PLAY_TUNE_NUM_EXECUTE                -1
 
 
 //**********************************************************************************
@@ -127,6 +128,7 @@ Task t_state_controller(MS_STATE_CONTROLLER_TASK_PERIOD, MS_STATE_CONTROLLER_TAS
 Task t_read_proximity_sensors_left(MS_READ_PROXIMITY_LEFT_TASK_PERIOD, MS_READ_PROXIMITY_LEFT_NUM_EXECUTE, &read_proximity_sensors_left);
 Task t_read_proximity_sensors_right(MS_READ_PROXIMITY_RIGHT_TASK_PERIOD, MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE, &read_proximity_sensors_right);
 Task t_watchdog(MS_WATCHDOG_TASK_PERIOD, MS_WATCHDOG_NUM_EXECUTE, &watchdog);
+Task t_play_tune(MS_PLAY_TUNE_PERIOD, MS_PLAY_TUNE_NUM_EXECUTE, &play_tune);
 
 
 Scheduler taskManager;
@@ -396,6 +398,8 @@ void taskInit()
     taskManager.addTask(t_read_proximity_sensors_left);
     taskManager.addTask(t_read_proximity_sensors_right);
     taskManager.addTask(t_watchdog);
+    taskManager.addTask(t_play_tune);
+
 
     // Enable the tasks
     t_read_IR_sensors.enable();
@@ -403,6 +407,7 @@ void taskInit()
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
     t_watchdog.enable();
+    t_play_tune.enable();
 
     Serial.println("Tasks initialised");
 }
@@ -411,6 +416,4 @@ void taskInit()
 void loop()
 { 
     taskManager.execute(); // Execute the scheduler
-    //play_tune(); 
-    //wdt_reset(); // Resets watchdog timer
 }
