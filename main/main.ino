@@ -252,11 +252,18 @@ void state_controller_task()
         case SEARCHING:
             static int blocked;
             static int blocked2;
+            static int suspend_turn;
+
+            // All of the sensors are clear
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
-                blocked = 0;
-                blocked2 = 0;
-                setMotor(RIGHT, CLOCKWISE, 100);
-                setMotor(LEFT, CLOCKWISE, 100);
+                if (suspend_turn < 100) { 
+                    blocked = 0;
+                    blocked2 = 0;
+                    setMotor(RIGHT, CLOCKWISE, 100);
+                    setMotor(LEFT, CLOCKWISE, 100);
+                } else {
+                    suspend_turn++;
+                }
             } else if (blocked) { // While all front sensors are blocked
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
@@ -268,11 +275,13 @@ void state_controller_task()
                      blocked = 1;
                   }
             } else if (IR_sensor_right_top >= 200 && IR_sensor_left_top >= 200 && IR_sensor_right_bottom >= 500 && IR_sensor_left_bottom >= 500 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
+                  // Everything is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
                   } else {
                      blocked = 1;
                   }
+                  suspend_turn = 1;
             } else if (IR_sensor_right_top >= 200 && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_top >= 200 && !blocked) { // When the left top sensor is blocked
@@ -280,7 +289,7 @@ void state_controller_task()
             } else if (IR_sensor_right_bottom >= 200 && !blocked) { // When the right bottom sensor is blocked
                   turnRobot(CLOCKWISE, 100);
             } else if (IR_sensor_left_bottom >= 200 && !blocked) { // When the left bottom sensor is blocked
-                  turnRobot(ANTICLOCKWISE, 100);                       
+                  turnRobot(ANTICLOCKWISE, 100);
             }
             break;
             
@@ -334,6 +343,7 @@ void state_controller_task()
             static int reverse_count = 0;
             static int turning_direction = 0;
             static int lock_flag = 0;
+            
             if (reverse_count > 1300) {
                 reverse_count = 0;
                 lock_flag = 0;
