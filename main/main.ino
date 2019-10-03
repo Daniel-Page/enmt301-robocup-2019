@@ -254,12 +254,13 @@ void state_controller_task()
             static int blocked;
             static int blocked2;
             static int suspend_turn;
-
+            
             // All of the sensors are clear
             if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
-                if (suspend_turn < 100) { 
+                if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
+                    suspend_turn = 0;
                     setMotor(RIGHT, CLOCKWISE, 100);
                     setMotor(LEFT, CLOCKWISE, 100);
                 } else {
