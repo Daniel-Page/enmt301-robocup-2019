@@ -332,15 +332,32 @@ void state_controller_task()
             break;
         case FAKE:
             static int reverse_count = 0;
+            static int turning_direction = 0;
+            static int lock_flag = 0;
             if (reverse_count > 1300) {
                 reverse_count = 0;
+                lock_flag = 0;
                 program_state = SEARCHING;
             } else if (reverse_count > 800) {
-                turnRobot(ANTICLOCKWISE, 100);                       
+                // Rotate the robot
+                if (lock_flag == 0) {
+                    if (random(0,2)) {
+                        turning_direction = 0;
+                    } else {
+                        turning_direction = 1;
+                    }
+                    lock_flag = 1;
+                }
+                if (turning_direction == 1) {
+                    turnRobot(ANTICLOCKWISE, 100);                       
+                } else if (turning_direction == 2) {
+                    turnRobot(CLOCKWISE, 100);
+                }
                 reverse_count++;
             } else {
-                setMotor(RIGHT, ANTICLOCKWISE, 75);
-                setMotor(LEFT, ANTICLOCKWISE, 75);
+                // Reverse the robot
+                setMotor(RIGHT, ANTICLOCKWISE, 60);
+                setMotor(LEFT, ANTICLOCKWISE, 60);
                 reverse_count++;
                 
             }
