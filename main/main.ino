@@ -68,6 +68,7 @@ o = stepper motors
 #define MS_STATE_CONTROLLER_TASK_PERIOD          1
 #define MS_READ_PROXIMITY_LEFT_TASK_PERIOD       3
 #define MS_READ_PROXIMITY_RIGHT_TASK_PERIOD      3
+#define MS_WATCHDOG_TASK_PERIOD                  100
 
 
 #define MS_READ_IR_TASK_NUM_EXECUTE             -1 // -1 means infinite
@@ -75,7 +76,7 @@ o = stepper motors
 #define MS_STATE_CONTROLLER_TASK_NUM_EXECUTE    -1
 #define MS_READ_PROXIMITY_LEFT_NUM_EXECUTE      -1
 #define MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE     -1
-
+#define MS_WATCHDOG_NUM_EXECUTE                 -1
 
 
 //**********************************************************************************
@@ -114,9 +115,10 @@ circBuffer sensor6;
 
 
 void read_IR_sensors();
-void state_controller_task();
 void read_proximity_sensors_left();
 void read_proximity_sensors_right();
+void watchdog();
+void state_controller_task();
 void taskInit();
 
 
@@ -124,6 +126,7 @@ Task t_read_IR_sensors(MS_READ_IR_TASK_PERIOD, MS_READ_IR_TASK_NUM_EXECUTE, &rea
 Task t_state_controller(MS_STATE_CONTROLLER_TASK_PERIOD, MS_STATE_CONTROLLER_TASK_NUM_EXECUTE, &state_controller_task);
 Task t_read_proximity_sensors_left(MS_READ_PROXIMITY_LEFT_TASK_PERIOD, MS_READ_PROXIMITY_LEFT_NUM_EXECUTE, &read_proximity_sensors_left);
 Task t_read_proximity_sensors_right(MS_READ_PROXIMITY_RIGHT_TASK_PERIOD, MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE, &read_proximity_sensors_right);
+Task t_watchdog(MS_WATCHDOG_TASK_PERIOD, MS_WATCHDOG_NUM_EXECUTE, &watchdog);
 
 
 Scheduler taskManager;
@@ -153,7 +156,7 @@ void setup()
     initMotors();
     taskInit();
 
-    // wdt_enable(WDTO_2S); // Watchdog timer set to trigger after 2 seconds if not reset
+    wdt_enable(WDTO_8S); // Watchdog timer set to trigger after 2 seconds if not reset
     Serial.println("Setup Finish");
 }
 
@@ -174,10 +177,7 @@ void read_proximity_sensors_left()
         static int is_prox_counting_left = 0;
         static int prox_counter_left = 0;
         static int pick_up_left_status = 0;
-    
-        
-        
-    
+
         pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
         pinMode(PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);  
       
@@ -200,10 +200,7 @@ void read_proximity_sensors_left()
                 
             } else if (pick_up_left_status == 0 && prox_sensor_left == 0 && inductive_prox_sensor_left == 0) {
                 prox_counter_left++;
-            }
-   
-    
-    
+            }    
 }
 
 
@@ -214,7 +211,6 @@ void read_proximity_sensors_right()
         static int prox_counter_right = 0;
         static int pick_up_right_status = 0;
     
-        
         pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
         pinMode(PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
       
@@ -233,11 +229,16 @@ void read_proximity_sensors_right()
                     program_state = FAKE;
                     prox_counter_right = 0;
                     
-
         } else if (pick_up_right_status == 0 && prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
             prox_counter_right++;
         }
     }
+}
+
+
+void watchdog() 
+{
+    wdt_reset(); // Resets watchdog timer
 }
 
 
@@ -393,12 +394,14 @@ void taskInit()
     taskManager.addTask(t_state_controller);
     taskManager.addTask(t_read_proximity_sensors_left);
     taskManager.addTask(t_read_proximity_sensors_right);
+    taskManager.addTask(t_watchdog);
 
     // Enable the tasks
     t_read_IR_sensors.enable();
     t_state_controller.enable();
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
+    t_watchdog.enable();
 
     Serial.println("Tasks initialised");
 }
