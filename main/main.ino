@@ -264,6 +264,7 @@ void state_controller_task()
                 if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
+                    weight_collection_timeout = 0;
                     suspend_turn = 0;
                     setMotor(RIGHT, CLOCKWISE, 100);
                     setMotor(LEFT, CLOCKWISE, 100);
@@ -294,10 +295,15 @@ void state_controller_task()
                   turnRobot(CLOCKWISE, 100);
             } else if (IR_sensor_right_bottom >= 150 && IR_sensor_left_bottom >= 150 && !blocked) {
                   program_state = FAKE;
+            } else if (weight_collection_timeout == 1000) {
+                  program_state = FAKE;
+                  weight_collection_timeout = 0;
             } else if (IR_sensor_right_bottom >= 150 && !blocked) { // When the right bottom sensor is blocked turns towards weight
                   turnRobot(CLOCKWISE, 75);
+                  weight_collection_timeout++;
             } else if (IR_sensor_left_bottom >= 150 && !blocked) { // When the left bottom sensor is blocked turn towards weight
                   turnRobot(ANTICLOCKWISE, 75);
+                  weight_collection_timeout++;
             }
             break;
             
@@ -350,11 +356,11 @@ void state_controller_task()
             static int turning_direction = 0;
             static int lock_flag = 0;
             
-            if (reverse_count > 1300) {
+            if (reverse_count > 1500) {
                 reverse_count = 0;
                 lock_flag = 0;
                 program_state = SEARCHING;
-            } else if (reverse_count > 800) {
+            } else if (reverse_count > 1000) {
                 // Rotate the robot
                 if (lock_flag == 0) {
                     if (random(0,2)) {
@@ -405,7 +411,7 @@ void taskInit()
 
     // Enable the tasks
     t_read_IR_sensors.enable();
-    //t_state_controller.enable();
+    t_state_controller.enable();
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
     t_watchdog.enable();
