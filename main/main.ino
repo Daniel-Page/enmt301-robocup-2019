@@ -38,7 +38,6 @@ o = stepper motors
 #include "src/Hx711/Hx711.h" // Load cell library
 #include "circular_buffer.h"
 #include <math.h>
-#include "src/FastLED/FastLED.h"
 
 
 //**********************************************************************************
@@ -73,6 +72,8 @@ o = stepper motors
 #define MS_READ_PROXIMITY_RIGHT_TASK_PERIOD      3
 #define MS_WATCHDOG_TASK_PERIOD                  100
 #define MS_PLAY_TUNE_PERIOD                      0
+#define MS_LED_PERIOD                            9
+
 
 #define MS_READ_IR_TASK_NUM_EXECUTE             -1 // -1 means infinite
 #define MS_LED_TASK_NUM_EXECUTE                 -1
@@ -81,6 +82,7 @@ o = stepper motors
 #define MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE     -1
 #define MS_WATCHDOG_NUM_EXECUTE                 -1
 #define MS_PLAY_TUNE_NUM_EXECUTE                -1
+#define MS_LED_NUM_EXECUTE                      -1
 
 
 //**********************************************************************************
@@ -136,6 +138,8 @@ Task t_read_proximity_sensors_left(MS_READ_PROXIMITY_LEFT_TASK_PERIOD, MS_READ_P
 Task t_read_proximity_sensors_right(MS_READ_PROXIMITY_RIGHT_TASK_PERIOD, MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE, &read_proximity_sensors_right);
 Task t_watchdog(MS_WATCHDOG_TASK_PERIOD, MS_WATCHDOG_NUM_EXECUTE, &watchdog);
 Task t_play_tune(MS_PLAY_TUNE_PERIOD, MS_PLAY_TUNE_NUM_EXECUTE, &play_tune);
+Task t_led(MS_LED_PERIOD, MS_LED_NUM_EXECUTE, &led_update);
+
 
 
 Scheduler taskManager;
@@ -164,7 +168,7 @@ void setup()
 
 
     initTune();
-    initLed();
+    setup_led_strip();
     initMotors();
     taskInit();
 
@@ -429,6 +433,8 @@ void taskInit()
     taskManager.addTask(t_read_proximity_sensors_right);
     taskManager.addTask(t_watchdog);
     taskManager.addTask(t_play_tune);
+    taskManager.addTask(t_led);
+
 
 
     // Enable the tasks
@@ -438,6 +444,7 @@ void taskInit()
     t_read_proximity_sensors_right.enable();
     t_watchdog.enable();
     t_play_tune.enable();
+    t_led.enable();
 
     Serial.println("Tasks initialised");
 }
