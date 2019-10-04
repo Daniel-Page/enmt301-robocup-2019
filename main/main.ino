@@ -38,6 +38,7 @@ o = stepper motors
 #include "src/Hx711/Hx711.h" // Load cell library
 #include "circular_buffer.h"
 #include <math.h>
+#include "src/FastLED/FastLED.h"
 
 
 //**********************************************************************************

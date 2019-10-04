@@ -10,7 +10,7 @@
 // Pin 6  has the LED on Teensy++ 2.0
 // Pin 13 has the LED on Teensy 3.0
 // give it a name:
-int led = 39;
+int led = 34;
 int led1 = A2;
 
 
