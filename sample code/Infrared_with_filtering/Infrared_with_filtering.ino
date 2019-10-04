@@ -2,7 +2,7 @@
 
 #include "circular_buffer.h"
 
-int analogInPin1 = A4;  
+int analogInPin1 = A3;  
 int sensorValue1 = 0;
 int analogInPin2 = A6;  
 int sensorValue2 = 0;
@@ -43,7 +43,7 @@ void loop() {
   sensorValue6 = analogRead(analogInPin6);
 
 
-  Serial.println(updateCircBuff(&sensor5, sensorValue5));
+  Serial.println(updateCircBuff(&sensor1, sensorValue1));
   Serial.print(" ");
 
   

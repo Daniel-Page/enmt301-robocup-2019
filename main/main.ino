@@ -50,6 +50,8 @@ o = stepper motors
 #define IR_SENSOR_REAR_PIN                       A4
 #define IR_SENSOR_LEFT_BOTTOM_PIN                A2
 #define IR_SENSOR_RIGHT_BOTTOM_PIN               A0
+#define IR_SENSOR_LEFT_LEFT_BOTTOM_PIN           A3
+#define IR_SENSOR_RIGHT_RIGHT_BOTTOM_PIN         A1
 #define LOAD_CELL_LEFT_1_PIN                     44
 #define LOAD_CELL_LEFT_2_PIN                     45
 #define LOAD_CELL_RIGHT_1_PIN                    46
@@ -88,8 +90,9 @@ int IR_sensor_right_top = 0;
 int IR_sensor_middle_top = 0;
 int IR_sensor_rear = 0;
 int IR_sensor_left_bottom = 0;
+int IR_sensor_left_left_bottom = 0;
 int IR_sensor_right_bottom = 0;
-
+int IR_sensor_right_right_bottom = 0;
 int inductive_prox_sensor_left = 0;
 int limit_switch_left = 0;
 int inductive_prox_sensor_right = 0;
@@ -113,6 +116,9 @@ circBuffer sensor3;
 circBuffer sensor4;
 circBuffer sensor5;
 circBuffer sensor6;
+circBuffer sensor7;
+circBuffer sensor8;
+
 
 
 void read_IR_sensors();
@@ -152,6 +158,9 @@ void setup()
     initCircBuff(&sensor4);
     initCircBuff(&sensor5);
     initCircBuff(&sensor6);
+    initCircBuff(&sensor7);
+    initCircBuff(&sensor8);
+
 
     initTune();
     initLed();
@@ -172,6 +181,8 @@ void read_IR_sensors()
     IR_sensor_rear = updateCircBuff(&sensor4, analogRead(IR_SENSOR_REAR_PIN));
     IR_sensor_left_bottom = updateCircBuff(&sensor5, analogRead(IR_SENSOR_LEFT_BOTTOM_PIN));
     IR_sensor_right_bottom = updateCircBuff(&sensor6, analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN));
+    IR_sensor_left_left_bottom = updateCircBuff(&sensor7, analogRead(IR_SENSOR_LEFT_LEFT_BOTTOM_PIN));
+    IR_sensor_right_right_bottom = updateCircBuff(&sensor8, analogRead(IR_SENSOR_RIGHT_RIGHT_BOTTOM_PIN));
 }
 
 
@@ -258,9 +269,15 @@ void state_controller_task()
             static int blocked2;
             static int suspend_turn;
             static int weight_collection_timeout = 0;
+            static int turn_towards_weight_left = 0;
+            static int turn_towards_weight_right = 0;
 
+            if (turn_towards_weight_left > 0 && turn_towards_weight_left < 400) {
+                turn_towards_weight_left++;
+            } else if (turn_towards_weight_right > 0 && turn_towards_weight_right < 400) {
+                turn_towards_weight_right++;
             // All of the sensors are clear
-            if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
+            } else if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 500 && IR_sensor_left_bottom < 500 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
                 if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
@@ -275,7 +292,7 @@ void state_controller_task()
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
                 turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_middle_top >= 50 && !blocked) { // When the middle top sensor is blocked
+            } else if (IR_sensor_middle_top >= 90 && !blocked) { // When the middle top sensor is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
                   } else {
@@ -289,20 +306,22 @@ void state_controller_task()
                      blocked = 1;
                   }
                   suspend_turn = 1;
-            } else if (IR_sensor_right_top >= 100  && !blocked) { // When the right top sensor is blocked
+            } else if (IR_sensor_right_top >= 80  && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
-            } else if (IR_sensor_left_top >= 100 && !blocked) { // When the left top sensor is blocked
+            } else if (IR_sensor_left_top >= 80 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 150 && IR_sensor_left_bottom >= 150 && !blocked) {
+            } else if (IR_sensor_right_bottom >= 100 && IR_sensor_left_bottom >= 100 && !blocked) {
                   program_state = FAKE;
             } else if (weight_collection_timeout == 1000) {
                   program_state = FAKE;
                   weight_collection_timeout = 0;
-            } else if (IR_sensor_right_bottom >= 150 && !blocked) { // When the right bottom sensor is blocked turns towards weight
+            } else if ((IR_sensor_right_bottom >= 100 || IR_sensor_right_right_bottom >= 100) && !blocked) { // When the right bottom sensor is blocked turns towards weight
                   turnRobot(CLOCKWISE, 75);
+                  turn_towards_weight_right = 1;
                   weight_collection_timeout++;
-            } else if (IR_sensor_left_bottom >= 150 && !blocked) { // When the left bottom sensor is blocked turn towards weight
+            } else if ((IR_sensor_left_bottom >= 100 || IR_sensor_left_left_bottom >= 100)  && !blocked) { // When the left bottom sensor is blocked turn towards weight
                   turnRobot(ANTICLOCKWISE, 75);
+                  turn_towards_weight_left = 1;
                   weight_collection_timeout++;
             }
             break;
