@@ -34,7 +34,7 @@ o = stepper motors
 #include "motors.h"
 #include "speaker.h"
 #include "sensors.h"
-//#include "led.h"
+#include "led.h"
 #include "src/Hx711/Hx711.h" // Load cell library
 #include "circular_buffer.h"
 #include <math.h>
@@ -72,8 +72,6 @@ o = stepper motors
 #define MS_READ_PROXIMITY_RIGHT_TASK_PERIOD      3
 #define MS_WATCHDOG_TASK_PERIOD                  100
 #define MS_PLAY_TUNE_PERIOD                      0
-#define MS_LED_PERIOD                            9
-
 
 #define MS_READ_IR_TASK_NUM_EXECUTE             -1 // -1 means infinite
 #define MS_LED_TASK_NUM_EXECUTE                 -1
@@ -82,7 +80,6 @@ o = stepper motors
 #define MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE     -1
 #define MS_WATCHDOG_NUM_EXECUTE                 -1
 #define MS_PLAY_TUNE_NUM_EXECUTE                -1
-#define MS_LED_NUM_EXECUTE                      -1
 
 
 //**********************************************************************************
@@ -138,8 +135,6 @@ Task t_read_proximity_sensors_left(MS_READ_PROXIMITY_LEFT_TASK_PERIOD, MS_READ_P
 Task t_read_proximity_sensors_right(MS_READ_PROXIMITY_RIGHT_TASK_PERIOD, MS_READ_PROXIMITY_RIGHT_NUM_EXECUTE, &read_proximity_sensors_right);
 Task t_watchdog(MS_WATCHDOG_TASK_PERIOD, MS_WATCHDOG_NUM_EXECUTE, &watchdog);
 Task t_play_tune(MS_PLAY_TUNE_PERIOD, MS_PLAY_TUNE_NUM_EXECUTE, &play_tune);
-//Task t_led(MS_LED_PERIOD, MS_LED_NUM_EXECUTE, &led_update);
-
 
 
 Scheduler taskManager;
@@ -168,7 +163,7 @@ void setup()
 
 
     initTune();
-    //setup_led_strip();
+    initLed();
     initMotors();
     taskInit();
 
@@ -282,7 +277,7 @@ void state_controller_task()
             } else if (turn_towards_weight_right > 0 && turn_towards_weight_right < 500) {
                 turn_towards_weight_right++;
             // All of the sensors are clear
-            } else if (IR_sensor_right_top < 150 && IR_sensor_left_top < 150 && IR_sensor_right_bottom < 200 && IR_sensor_left_bottom < 200 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
+            } else if (IR_sensor_right_top < 300 && IR_sensor_left_top < 300 && IR_sensor_right_bottom < 200 && IR_sensor_left_bottom < 200 && IR_sensor_middle_top < 300) { // When nothing blocks both sensors
                 if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
@@ -299,13 +294,13 @@ void state_controller_task()
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
                 turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_middle_top >= 50 && !blocked) { // When the middle top sensor is blocked
+            } else if (IR_sensor_middle_top >= 300 && !blocked) { // When the middle top sensor is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
                   } else {
                      blocked = 1;
                   }
-            } else if (IR_sensor_right_top >= 100 && IR_sensor_left_top >= 100 && IR_sensor_right_bottom >= 200 && IR_sensor_left_bottom >= 200 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
+            } else if (IR_sensor_right_top >= 300 && IR_sensor_left_top >= 300 && IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && IR_sensor_middle_top >= 300) { // When both sensors are blocked
                   // Everything is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
@@ -313,24 +308,20 @@ void state_controller_task()
                      blocked = 1;
                   }
                   suspend_turn = 1;
-            } else if (IR_sensor_right_top >= 150 && !blocked) { // When the right top sensor is blocked
+            } else if (IR_sensor_right_top >= 300 && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
-            } else if (IR_sensor_left_top >= 150 && !blocked) { // When the left top sensor is blocked
+            } else if (IR_sensor_left_top >= 300 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
             } else if (IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && !blocked) {
-                  Serial.println("###RIGHT###");
-
                   program_state = FAKE;
             } else if (weight_collection_timeout == 1000) {
                   program_state = FAKE;
                   weight_collection_timeout = 0;
-            } else if (IR_sensor_right_bottom >= 200 && !blocked) { // When the right bottom sensor is blocked turns towards weight
-                  Serial.println("###RIGHT###");
+            } else if ((IR_sensor_right_bottom - IR_sensor_right_bottom) >= 50 && !blocked) { // When the right bottom sensor is blocked turns towards weight
                   turnRobot(CLOCKWISE, 75);
                   turn_towards_weight_right = 1;
                   weight_collection_timeout++;
-            } else if (IR_sensor_left_bottom >= 200  && !blocked) { // When the left bottom sensor is blocked turn towards weight
-                  Serial.println("###LEFT###");
+            } else if ((IR_sensor_left_bottom - IR_sensor_left_top) >= 50 && !blocked) { // When the left bottom sensor is blocked turn towards weight
                   turnRobot(ANTICLOCKWISE, 75);
                   turn_towards_weight_left = 1;
                   weight_collection_timeout++;
@@ -437,16 +428,15 @@ void taskInit()
     taskManager.addTask(t_read_proximity_sensors_right);
     taskManager.addTask(t_watchdog);
     taskManager.addTask(t_play_tune);
-    //taskManager.addTask(t_led);
+
 
     // Enable the tasks
     t_read_IR_sensors.enable();
     t_state_controller.enable();
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
-    //t_watchdog.enable();
-    //t_play_tune.enable();
-    //t_led.enable();
+    t_watchdog.enable();
+    t_play_tune.enable();
 
     Serial.println("Tasks initialised");
 }

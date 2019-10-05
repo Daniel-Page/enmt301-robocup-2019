@@ -2,7 +2,7 @@
 
 #include "circular_buffer.h"
 
-int analogInPin1 = A0;  
+int analogInPin1 = A3;  
 int sensorValue1 = 0;
 int analogInPin2 = A6;  
 int sensorValue2 = 0;
