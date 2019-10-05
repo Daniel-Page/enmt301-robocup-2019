@@ -312,7 +312,7 @@ void state_controller_task()
                   turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_top >= 300 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && !blocked) {
+            } else if (IR_sensor_right_bottom >= 200 && IR_sensor_left_bottom >= 200 && !blocked) {
                   program_state = FAKE;
             } else if (weight_collection_timeout == 1000) {
                   program_state = FAKE;
