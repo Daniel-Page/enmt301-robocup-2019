@@ -5,9 +5,9 @@
    Hx711.DOUT - pin 24
    Hx711.SCK  - pin 25
 */
-#include "Hx711.h"                     //Include needed library of functions to talk to hx711 IC
-Hx711 scale(24, 25);                    //Setup pins for digital communications with weight IC
- 
+#include "Hx711.h"                      //Include needed library of functions to talk to hx711 IC
+Hx711 scale1(16, 17);                    //Setup pins for digital communications with weight IC
+Hx711 scale2(26, 27);
 void setup() 
 {
   pinMode(49, OUTPUT);                 //Pin 49 is used to enable IO power
@@ -17,7 +17,12 @@ void setup()
  
 void loop() 
 {
-  Serial.print(scale.getGram(), 1);    //Get force and print answer
-  Serial.println(" g");
-  delay(200);                          //Wait a while
+ Serial.print(scale1.getGram(), 1);    //Get force and print answer
+ Serial.print(" ");
+ 
+ delay(200); 
+ Serial.print(scale2.getGram(), 1);    //Get force and print answer
+ Serial.print("\n");
+ delay(200);
+                         //Wait a while
 }
