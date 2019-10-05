@@ -294,12 +294,8 @@ void state_controller_task()
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
                 turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_middle_top >= 300 && !blocked) { // When the middle top sensor is blocked
-                  if (random(0,2)) {
-                     blocked2 = 1;
-                  } else {
-                     blocked = 1;
-                  }
+            } else if (IR_sensor_middle_top >= 250 && !blocked) { // When the middle top sensor is blocked
+                  program_state = FAKE;
             } else if (IR_sensor_right_top >= 300 && IR_sensor_left_top >= 300 && IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && IR_sensor_middle_top >= 300) { // When both sensors are blocked
                   // Everything is blocked
                   if (random(0,2)) {
@@ -436,7 +432,7 @@ void taskInit()
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
     t_watchdog.enable();
-    t_play_tune.enable();
+    //t_play_tune.enable();
 
     Serial.println("Tasks initialised");
 }
