@@ -2,7 +2,7 @@
 
 #include "circular_buffer.h"
 
-int analogInPin1 = A3;  
+int analogInPin1 = A0;  
 int sensorValue1 = 0;
 int analogInPin2 = A6;  
 int sensorValue2 = 0;
@@ -43,8 +43,10 @@ void loop() {
   sensorValue6 = analogRead(analogInPin6);
 
 
-  Serial.println(updateCircBuff(&sensor1, sensorValue1));
+  Serial.print(updateCircBuff(&sensor1, sensorValue1));
   Serial.print(" ");
+  Serial.print(updateCircBuff(&sensor2, sensorValue2));
+  Serial.print("\n");
 
   
   delay(2); // 2 ms ADC settling time

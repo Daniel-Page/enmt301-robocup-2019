@@ -272,12 +272,12 @@ void state_controller_task()
             static int turn_towards_weight_left = 0;
             static int turn_towards_weight_right = 0;
 
-            if (turn_towards_weight_left > 0 && turn_towards_weight_left < 500) {
+            if (turn_towards_weight_left > 0 && turn_towards_weight_left < 600) {
                 turn_towards_weight_left++;
-            } else if (turn_towards_weight_right > 0 && turn_towards_weight_right < 500) {
+            } else if (turn_towards_weight_right > 0 && turn_towards_weight_right < 600) {
                 turn_towards_weight_right++;
             // All of the sensors are clear
-            } else if (IR_sensor_right_top < 300 && IR_sensor_left_top < 300 && IR_sensor_right_bottom < 200 && IR_sensor_left_bottom < 200 && IR_sensor_middle_top < 300) { // When nothing blocks both sensors
+            } else if (IR_sensor_right_top < 200 && IR_sensor_left_top < 200 && IR_sensor_right_bottom < 200 && IR_sensor_left_bottom < 200 && IR_sensor_middle_top < 50) { // When nothing blocks both sensors
                 if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
@@ -294,9 +294,13 @@ void state_controller_task()
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
                 turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_middle_top >= 250 && !blocked) { // When the middle top sensor is blocked
-                  program_state = FAKE;
-            } else if (IR_sensor_right_top >= 300 && IR_sensor_left_top >= 300 && IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && IR_sensor_middle_top >= 300) { // When both sensors are blocked
+            } else if (IR_sensor_middle_top >= 30 && !blocked) { // When the middle top sensor is blocked
+                  if (random(0,2)) {
+                     blocked2 = 1;
+                  } else {
+                     blocked = 1;
+                  }
+            } else if (IR_sensor_right_top >= 100 && IR_sensor_left_top >= 100 && IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && IR_sensor_middle_top >= 50) { // When both sensors are blocked
                   // Everything is blocked
                   if (random(0,2)) {
                      blocked2 = 1;
@@ -304,20 +308,20 @@ void state_controller_task()
                      blocked = 1;
                   }
                   suspend_turn = 1;
-            } else if (IR_sensor_right_top >= 300 && !blocked) { // When the right top sensor is blocked
+            } else if (IR_sensor_right_top >= 40  && !blocked) { // When the right top sensor is blocked
                   turnRobot(ANTICLOCKWISE, 100);
-            } else if (IR_sensor_left_top >= 300 && !blocked) { // When the left top sensor is blocked
+            } else if (IR_sensor_left_top >= 40 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 200 && IR_sensor_left_bottom >= 200 && !blocked) {
+            } else if (IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && !blocked) {
                   program_state = FAKE;
             } else if (weight_collection_timeout == 1000) {
                   program_state = FAKE;
                   weight_collection_timeout = 0;
-            } else if ((IR_sensor_right_bottom - IR_sensor_right_bottom) >= 50 && !blocked) { // When the right bottom sensor is blocked turns towards weight
+            } else if (IR_sensor_right_bottom >= 50 && !blocked) { // When the right bottom sensor is blocked turns towards weight
                   turnRobot(CLOCKWISE, 75);
                   turn_towards_weight_right = 1;
                   weight_collection_timeout++;
-            } else if ((IR_sensor_left_bottom - IR_sensor_left_top) >= 50 && !blocked) { // When the left bottom sensor is blocked turn towards weight
+            } else if (IR_sensor_left_bottom >= 50  && !blocked) { // When the left bottom sensor is blocked turn towards weight
                   turnRobot(ANTICLOCKWISE, 75);
                   turn_towards_weight_left = 1;
                   weight_collection_timeout++;
