@@ -242,11 +242,9 @@ void read_proximity_sensors_right()
             pickup_state = LOWERING_RIGHT;
             prox_counter_right = 0;
             pick_up_right_status = 1;
-
         } else if (pick_up_right_status == 0 && prox_counter_right == 200) {
-                    program_state = FAKE;
-                    prox_counter_right = 0;
-                    
+            program_state = FAKE;
+            prox_counter_right = 0;  
         } else if (pick_up_right_status == 0 && prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
             prox_counter_right++;
         } 
@@ -275,7 +273,6 @@ void state_controller_task()
             static int turn_towards_weight_left = 0;
             static int turn_towards_weight_right = 0;
             static int turn_towards_weight_block = 0;
-
 
             if (turn_towards_weight_left > 0 && turn_towards_weight_left < 400) {
                 turn_towards_weight_left++;
