@@ -369,16 +369,18 @@ void state_controller_task()
                     } else {
                         if (scale_1.get_units() >= 25) {
                             weight_count++;
+                            program_state = SEARCHING;
                         } else {
                             is_prox_counting_left = 0;
                             prox_counter_left = 0;
                             pick_up_left_status = 0;
                             step_count_left = 0;
+                            program_state = FAKE;
                         }
                         
                         Serial.print(scale_1.get_units(), 1);
                        
-                        program_state = SEARCHING;
+                        
                     }
                     break;
                 case LOWERING_RIGHT:
@@ -397,15 +399,17 @@ void state_controller_task()
                     } else {
                         if (scale_2.get_units() >= 25) {
                             weight_count++;
+                            program_state = SEARCHING;
+
                         } else {
                             is_prox_counting_right = 0;
                             prox_counter_right = 0;
                             pick_up_right_status = 0;                       
                             step_count_right = 0;
+                            program_state = FAKE;
                         }
                         Serial.print(scale_2.get_units(), 1); 
                     
-                        program_state = SEARCHING;
                     }
                     break;
                    
