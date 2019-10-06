@@ -48,11 +48,9 @@ o = stepper motors
 #define IR_SENSOR_LEFT_TOP_PIN                   A10
 #define IR_SENSOR_MIDDLE_TOP_LEFT_PIN            A8
 #define IR_SENSOR_MIDDLE_TOP_RIGHT_PIN           A9
-#define IR_SENSOR_REAR_PIN                       A4
 #define IR_SENSOR_LEFT_BOTTOM_PIN                A2
 #define IR_SENSOR_RIGHT_BOTTOM_PIN               A0
-#define IR_SENSOR_LEFT_LEFT_BOTTOM_PIN           A3
-#define IR_SENSOR_RIGHT_RIGHT_BOTTOM_PIN         A1
+#define IR_SENSOR_MIDDLE_BOTTOM_PIN              A4
 #define LOAD_CELL_LEFT_1_PIN                     44
 #define LOAD_CELL_LEFT_2_PIN                     45
 #define LOAD_CELL_RIGHT_1_PIN                    46
@@ -61,14 +59,12 @@ o = stepper motors
 #define INDUCTIVE_PROX_SENSOR_RIGHT_PIN          21
 #define PROX_SENSOR_LEFT_PIN                     43
 #define PROX_SENSOR_RIGHT_PIN                    42
-
 #define WEIGHT_SENSOR_LEFT_DOUT                  16       
 #define WEIGHT_SENSOR_LEFT_CLK                   17
 #define WEIGHT_SENSOR_RIGHT_DOUT                 26
 #define WEIGHT_SENSOR_RIGHT_CLK                  27
 #define CALIBRATION_FACTOR_LEFT                 -7050.0
 #define CALIBRATION_FACTOR_RIGHT                -7050.0
-
 #define STEPPER_MOTOR_LOWERING_STEPS             3250
 #define STEPPER_MOTOR_RAISING_STEPS              2850
 
@@ -79,7 +75,7 @@ o = stepper motors
 #define MS_READ_PROXIMITY_LEFT_TASK_PERIOD       3
 #define MS_READ_PROXIMITY_RIGHT_TASK_PERIOD      3
 #define MS_WATCHDOG_TASK_PERIOD                  100
-#define MS_PLAY_TUNE_PERIOD                      0
+#define MS_PLAY_TUNE_PERIOD                      0.01
 
 #define MS_READ_IR_TASK_NUM_EXECUTE             -1 // -1 means infinite
 #define MS_LED_TASK_NUM_EXECUTE                 -1
@@ -99,24 +95,20 @@ int IR_sensor_middle_top_left = 0;
 int IR_sensor_middle_top_right = 0;
 int IR_sensor_rear = 0;
 int IR_sensor_left_bottom = 0;
-int IR_sensor_left_left_bottom = 0;
 int IR_sensor_right_bottom = 0;
-int IR_sensor_right_right_bottom = 0;
+int IR_sensor_middle_bottom = 0;
 int inductive_prox_sensor_left = 0;
 int limit_switch_left = 0;
 int inductive_prox_sensor_right = 0;
 int limit_switch_right = 0;
 int prox_sensor_left = 0;
 int prox_sensor_right = 0;
-
 int is_prox_counting_right = 0;
 int prox_counter_right = 0;
 int pick_up_right_status = 0;
-
 int is_prox_counting_left = 0;
 int prox_counter_left = 0;
 int pick_up_left_status = 0;
-
 
 enum modes {SEARCHING, PICKUP, FAKE, FINISHED};
 enum modes program_state = SEARCHING;
@@ -124,7 +116,7 @@ enum modes program_state = SEARCHING;
 enum pickup_modes {INACTIVE, LOWERING_LEFT, RAISING_LEFT, LOWERING_RIGHT, RAISING_RIGHT};
 enum pickup_modes pickup_state = INACTIVE;
 
-HX711 scale_1;   // Setup pins for digital communications with weight IC
+HX711 scale_1; // Setup pins for digital communications with weight IC
 HX711 scale_2; // Setup pins for digital communications with weight IC
 
 // Initialise circular buffers for IR signals
@@ -135,7 +127,6 @@ circBuffer sensor4;
 circBuffer sensor5;
 circBuffer sensor6;
 circBuffer sensor7;
-//circBuffer sensor8;
 
 
 void read_IR_sensors();
@@ -159,8 +150,8 @@ Scheduler taskManager;
 
 void setup()
 {
-    Serial.begin(BAUD_RATE); // Initialises serial
-    Serial.println("Setup Start");
+    //Serial.begin(BAUD_RATE); // Initialises serial
+    //Serial.println("Setup Start");
 
     // Proximity sensors
     //pinMode(PROX_SENSOR_LEFT_PIN, INPUT);  
@@ -176,7 +167,6 @@ void setup()
     initCircBuff(&sensor5);
     initCircBuff(&sensor6);
     initCircBuff(&sensor7);
-    //initCircBuff(&sensor8);
 
     scale_1.begin(WEIGHT_SENSOR_LEFT_DOUT, WEIGHT_SENSOR_LEFT_CLK);
     scale_1.set_scale(CALIBRATION_FACTOR_LEFT);
@@ -193,7 +183,7 @@ void setup()
 
     wdt_enable(WDTO_8S); // Watchdog timer set to trigger after 2 seconds if not reset
     
-    Serial.println("Setup Finish");
+    //Serial.println("Setup Finish");
 }
 
 
@@ -202,17 +192,15 @@ void read_IR_sensors()
     IR_sensor_left_top = updateCircBuff(&sensor1, analogRead(IR_SENSOR_LEFT_TOP_PIN));
     IR_sensor_right_top = updateCircBuff(&sensor2, analogRead(IR_SENSOR_RIGHT_TOP_PIN));
     IR_sensor_middle_top_left = updateCircBuff(&sensor3, analogRead(IR_SENSOR_MIDDLE_TOP_LEFT_PIN));
-    IR_sensor_middle_top_right = updateCircBuff(&sensor7, analogRead(IR_SENSOR_MIDDLE_TOP_RIGHT_PIN));
-    IR_sensor_rear = updateCircBuff(&sensor4, analogRead(IR_SENSOR_REAR_PIN));
+    IR_sensor_middle_top_right = updateCircBuff(&sensor4, analogRead(IR_SENSOR_MIDDLE_TOP_RIGHT_PIN));
     IR_sensor_left_bottom = updateCircBuff(&sensor5, analogRead(IR_SENSOR_LEFT_BOTTOM_PIN));
     IR_sensor_right_bottom = updateCircBuff(&sensor6, analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN));
+    IR_sensor_middle_bottom = updateCircBuff(&sensor7, analogRead(IR_SENSOR_MIDDLE_BOTTOM_PIN));
 }
 
 
 void read_proximity_sensors_left() 
 {   
-       
-
         pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
         pinMode(PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);  
       
@@ -241,9 +229,6 @@ void read_proximity_sensors_left()
 
 void read_proximity_sensors_right() 
 {
-    if (program_state == SEARCHING) {
-        
-    
         pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
         pinMode(PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
       
@@ -264,8 +249,7 @@ void read_proximity_sensors_right()
                     
         } else if (pick_up_right_status == 0 && prox_sensor_right == 0 && inductive_prox_sensor_right == 0) {
             prox_counter_right++;
-        }
-    }
+        } 
 }
 
 
@@ -291,12 +275,12 @@ void state_controller_task()
             static int turn_towards_weight_left = 0;
             static int turn_towards_weight_right = 0;
 
-            if (turn_towards_weight_left > 0 && turn_towards_weight_left < 600) {
+            if (turn_towards_weight_left > 0 && turn_towards_weight_left < 400) {
                 turn_towards_weight_left++;
-            } else if (turn_towards_weight_right > 0 && turn_towards_weight_right < 600) {
+            } else if (turn_towards_weight_right > 0 && turn_towards_weight_right < 400) {
                 turn_towards_weight_right++;
             // All of the sensors are clear
-            } else if (IR_sensor_right_top < 250 && IR_sensor_left_top < 250 && IR_sensor_right_bottom < 150 && IR_sensor_left_bottom < 150 && IR_sensor_middle_top_left < 250 && IR_sensor_middle_top_right < 250) { // When nothing blocks both sensors
+            } else if (IR_sensor_right_top < 250 && IR_sensor_left_top < 250 && IR_sensor_right_bottom < 150 && IR_sensor_left_bottom < 150 && IR_sensor_middle_top_left < 350 && IR_sensor_middle_top_right < 350) { // When nothing blocks both sensors
                 if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
@@ -313,7 +297,7 @@ void state_controller_task()
                 turnRobot(ANTICLOCKWISE, 100);
             } else if (blocked2) {
                 turnRobot(CLOCKWISE, 100);
-            } else if ((IR_sensor_middle_top_left >= 250 || IR_sensor_middle_top_right >= 250) && !blocked) { // When the middle top sensor is blocked
+            } else if ((IR_sensor_middle_top_left >= 350 || IR_sensor_middle_top_right >= 350) && !blocked) { // When the middle top sensor is blocked
                   program_state = FAKE;
             } else if (IR_sensor_right_top >= 250 && IR_sensor_left_top >= 250 && IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && IR_sensor_middle_top_left >= 50 && IR_sensor_middle_top_right >= 50) { // When both sensors are blocked
                   // Everything is blocked
@@ -327,7 +311,7 @@ void state_controller_task()
                   turnRobot(ANTICLOCKWISE, 100);
             } else if (IR_sensor_left_top >= 250 && !blocked) { // When the left top sensor is blocked
                   turnRobot(CLOCKWISE, 100);
-            } else if (IR_sensor_right_bottom >= 300 && IR_sensor_left_bottom >= 300 && !blocked) {
+            } else if (IR_sensor_middle_bottom >= 200 && IR_sensor_middle_top_left < 300 && IR_sensor_middle_top_right < 300) {
                   program_state = FAKE;
             } else if (weight_collection_timeout == 1000) {
                   program_state = FAKE;
@@ -372,10 +356,7 @@ void state_controller_task()
                             step_count_left = 0;
                             program_state = FAKE;
                         }
-                        
-                        Serial.print(scale_1.get_units(), 1);
-                       
-                        
+                        //Serial.print(scale_1.get_units(), 1);
                     }
                     break;
                 case LOWERING_RIGHT:
@@ -403,8 +384,7 @@ void state_controller_task()
                             step_count_right = 0;
                             program_state = FAKE;
                         }
-                        Serial.print(scale_2.get_units(), 1); 
-                    
+                        //Serial.print(scale_2.get_units(), 1); 
                     }
                     break;
                    
@@ -440,14 +420,13 @@ void state_controller_task()
                 setMotor(RIGHT, ANTICLOCKWISE, 60);
                 setMotor(LEFT, ANTICLOCKWISE, 60);
                 reverse_count++;
-                
             }
      
             break;
         case FINISHED:
             setMotor(LEFT, STATIONARY, 0);
             setMotor(RIGHT, STATIONARY, 0);
-            Serial.println("Two weights collected");
+            //Serial.println("Two weights collected");
             break;
      
     }
@@ -474,9 +453,9 @@ void taskInit()
     t_read_proximity_sensors_left.enable();
     t_read_proximity_sensors_right.enable();
     t_watchdog.enable();
-    //t_play_tune.enable();
+    t_play_tune.enable();
 
-    Serial.println("Tasks initialised");
+    //Serial.println("Tasks initialised");
 }
 
 
