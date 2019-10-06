@@ -67,6 +67,9 @@ o = stepper motors
 #define CALIBRATION_FACTOR_RIGHT                -7050.0
 #define STEPPER_MOTOR_LOWERING_STEPS             3250
 #define STEPPER_MOTOR_RAISING_STEPS              2850
+#define LIMIT_SWITCH_LEFT                        34
+#define LIMIT_SWITCH_RIGHT                       35
+
 
 // Task scheduler tasks
 #define MS_READ_IR_TASK_PERIOD                   2 // In ms. Also note 0 is the equivalent to the main loop
@@ -98,8 +101,8 @@ int IR_sensor_left_bottom = 0;
 int IR_sensor_right_bottom = 0;
 int IR_sensor_middle_bottom = 0;
 int inductive_prox_sensor_left = 0;
-int limit_switch_left = 0;
 int inductive_prox_sensor_right = 0;
+int limit_switch_left = 0;
 int limit_switch_right = 0;
 int prox_sensor_left = 0;
 int prox_sensor_right = 0;
@@ -110,7 +113,7 @@ int is_prox_counting_left = 0;
 int prox_counter_left = 0;
 int pick_up_left_status = 0;
 
-enum modes {SEARCHING, PICKUP, FAKE, FINISHED};
+enum modes {SEARCHING, PICKUP, FAKE, FINISHED, TURN};
 enum modes program_state = SEARCHING;
 
 enum pickup_modes {INACTIVE, LOWERING_LEFT, RAISING_LEFT, LOWERING_RIGHT, RAISING_RIGHT};
@@ -168,6 +171,9 @@ void setup()
     initCircBuff(&sensor6);
     initCircBuff(&sensor7);
 
+    pinMode(limit_switch_left,INPUT);  //Define all the pins as inputs
+    pinMode(limit_switch_right,INPUT);
+
     scale_1.begin(WEIGHT_SENSOR_LEFT_DOUT, WEIGHT_SENSOR_LEFT_CLK);
     scale_1.set_scale(CALIBRATION_FACTOR_LEFT);
     scale_1.tare(); //Reset the scale to 0
@@ -196,6 +202,8 @@ void read_IR_sensors()
     IR_sensor_left_bottom = updateCircBuff(&sensor5, analogRead(IR_SENSOR_LEFT_BOTTOM_PIN));
     IR_sensor_right_bottom = updateCircBuff(&sensor6, analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN));
     IR_sensor_middle_bottom = updateCircBuff(&sensor7, analogRead(IR_SENSOR_MIDDLE_BOTTOM_PIN));
+    limit_switch_left = digitalRead(LIMIT_SWITCH_LEFT);
+    limit_switch_right = digitalRead(LIMIT_SWITCH_RIGHT);
 }
 
 
@@ -273,7 +281,15 @@ void state_controller_task()
             static int turn_towards_weight_left = 0;
             static int turn_towards_weight_right = 0;
             static int turn_towards_weight_block = 0;
+            static int limit_turning_direction = 0;
 
+
+            if (limit_switch_left) {
+                limit_turning_direction = 1;
+            } else if (limit_switch_right) {
+                limit_turning_direction = 0;
+            }
+            
             if (turn_towards_weight_left > 0 && turn_towards_weight_left < 400) {
                 turn_towards_weight_left++;
             } else if (turn_towards_weight_right > 0 && turn_towards_weight_right < 400) {
@@ -432,12 +448,25 @@ void state_controller_task()
                 setMotor(LEFT, ANTICLOCKWISE, 60);
                 reverse_count++;
             }
-     
             break;
         case FINISHED:
             setMotor(LEFT, STATIONARY, 0);
             setMotor(RIGHT, STATIONARY, 0);
             //Serial.println("Two weights collected");
+            break;
+        case TURN:
+            static int turn_count;
+            if (turn_count > 500) {
+                turn_count = 0;
+                program_state = SEARCHING;
+            } else {
+                if (turning_direction == 1) {
+                    turnRobot(ANTICLOCKWISE, 100);                       
+                } else if (turning_direction == 0) {
+                    turnRobot(CLOCKWISE, 100);
+                }
+                turn_count++;
+            }
             break;
      
     }
