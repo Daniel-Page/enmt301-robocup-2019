@@ -299,7 +299,6 @@ void state_controller_task()
                 if (suspend_turn < 1 || suspend_turn > 600) { 
                     blocked = 0;
                     blocked2 = 0;
-                    turn_towards_weight_block = 0;
                     turn_towards_weight_right = 0;
                     turn_towards_weight_left = 0;
                     weight_collection_timeout = 0;
@@ -341,13 +340,13 @@ void state_controller_task()
                   turn_towards_weight_left = 1;
                   weight_collection_timeout++;
             }
-            if (turn_towards_weight_block && IR_sensor_left_bottom > 300 || IR_sensor_right_bottom > 300) {
+            if (turn_towards_weight_block && IR_sensor_left_bottom > 350 || IR_sensor_right_bottom > 350) {
                   turn_towards_weight_block = 1;
             }
 
-            if (turn_towards_weight_block < 500 && turn_towards_weight_block > 0) {
+            if (turn_towards_weight_block < 1500 && turn_towards_weight_block > 1500) {
                 turn_towards_weight_block++;
-            } else if (turn_towards_weight_block == 500) {
+            } else if (turn_towards_weight_block == 1500) {
                 turn_towards_weight_block++;
                 program_state = FAKE;
                 turn_towards_weight_block = 0;
@@ -422,7 +421,7 @@ void state_controller_task()
             static int turning_direction = 0;
             static int lock_flag = 0;
             
-            if (reverse_count > 1500) {
+            if (reverse_count > 1850) {
                 reverse_count = 0;
                 lock_flag = 0;
                 program_state = SEARCHING;
