@@ -29,6 +29,9 @@
 #define DOUT  3
 #define CLK  2
 
+//Hx711 scale1(16, 17);                    //Setup pins for digital communications with weight IC
+//Hx711 scale2(26, 27);
+
 HX711 scale;
 
 void setup() {

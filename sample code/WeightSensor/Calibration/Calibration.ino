@@ -33,8 +33,12 @@
 
 #include "HX711.h"
 
-#define DOUT  3
-#define CLK  2
+#define DOUT  16
+#define CLK  17
+
+//Hx711 scale1(16, 17);                    //Setup pins for digital communications with weight IC
+//Hx711 scale2(26, 27);
+
 
 HX711 scale;
 

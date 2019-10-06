@@ -61,6 +61,13 @@ o = stepper motors
 #define PROX_SENSOR_LEFT_PIN                     43
 #define PROX_SENSOR_RIGHT_PIN                    42
 
+#define WEIGHT_SENSOR_LEFT_DOUT                  16       
+#define WEIGHT_SENSOR_LEFT_CLK                   17
+#define WEIGHT_SENSOR_RIGHT_DOUT                 26
+#define WEIGHT_SENSOR_RIGHT_CLK                  27
+#define CALIBRATION_FACTOR_LEFT                 -7050.0
+#define CALIBRATION_FACTOR_RIGHT                -7050.0
+
 #define STEPPER_MOTOR_LOWERING_STEPS             3250
 #define STEPPER_MOTOR_RAISING_STEPS              2850
 
@@ -100,14 +107,25 @@ int limit_switch_right = 0;
 int prox_sensor_left = 0;
 int prox_sensor_right = 0;
 
+
+
+int is_prox_counting_right = 0;
+int prox_counter_right = 0;
+int pick_up_right_status = 0;
+
+int is_prox_counting_left = 0;
+int prox_counter_left = 0;
+int pick_up_left_status = 0;
+
+
 enum modes {SEARCHING, PICKUP, FAKE, FINISHED};
 enum modes program_state = SEARCHING;
 
 enum pickup_modes {INACTIVE, LOWERING_LEFT, RAISING_LEFT, LOWERING_RIGHT, RAISING_RIGHT};
 enum pickup_modes pickup_state = INACTIVE;
 
-Hx711 scale(LOAD_CELL_LEFT_1_PIN,LOAD_CELL_LEFT_1_PIN);   // Setup pins for digital communications with weight IC
-// Hx711 scale(LOAD_CELL_RIGHT_2_PIN,LOAD_CELL_RIGHT_2_PIN); // Setup pins for digital communications with weight IC
+HX711 scale_1;   // Setup pins for digital communications with weight IC
+HX711 scale_2; // Setup pins for digital communications with weight IC
 
 // Initialise circular buffers for IR signals
 circBuffer sensor1;
@@ -118,7 +136,6 @@ circBuffer sensor5;
 circBuffer sensor6;
 //circBuffer sensor7;
 //circBuffer sensor8;
-
 
 
 void read_IR_sensors();
@@ -161,7 +178,14 @@ void setup()
     //initCircBuff(&sensor7);
     //initCircBuff(&sensor8);
 
+    scale_1.begin(WEIGHT_SENSOR_LEFT_DOUT, WEIGHT_SENSOR_LEFT_CLK);
+    scale_1.set_scale(CALIBRATION_FACTOR_LEFT);
+    scale_1.tare(); //Reset the scale to 0
 
+    scale_2.begin(WEIGHT_SENSOR_RIGHT_DOUT, WEIGHT_SENSOR_RIGHT_CLK);
+    scale_2.set_scale(CALIBRATION_FACTOR_RIGHT);
+    scale_2.tare(); //Reset the scale to 0
+ 
     initTune();
     initLed();
     initMotors();
@@ -181,16 +205,14 @@ void read_IR_sensors()
     IR_sensor_rear = updateCircBuff(&sensor4, analogRead(IR_SENSOR_REAR_PIN));
     IR_sensor_left_bottom = updateCircBuff(&sensor5, analogRead(IR_SENSOR_LEFT_BOTTOM_PIN));
     IR_sensor_right_bottom = updateCircBuff(&sensor6, analogRead(IR_SENSOR_RIGHT_BOTTOM_PIN));
-   // IR_sensor_left_left_bottom = updateCircBuff(&sensor7, analogRead(IR_SENSOR_LEFT_LEFT_BOTTOM_PIN));
+    // IR_sensor_left_left_bottom = updateCircBuff(&sensor7, analogRead(IR_SENSOR_LEFT_LEFT_BOTTOM_PIN));
     //IR_sensor_right_right_bottom = updateCircBuff(&sensor8, analogRead(IR_SENSOR_RIGHT_RIGHT_BOTTOM_PIN));
 }
 
 
 void read_proximity_sensors_left() 
 {   
-        static int is_prox_counting_left = 0;
-        static int prox_counter_left = 0;
-        static int pick_up_left_status = 0;
+       
 
         pinMode(INDUCTIVE_PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);
         pinMode(PROX_SENSOR_LEFT_PIN, INPUT_PULLUP);  
@@ -221,9 +243,7 @@ void read_proximity_sensors_left()
 void read_proximity_sensors_right() 
 {
     if (program_state == SEARCHING) {
-        static int is_prox_counting_right = 0;
-        static int prox_counter_right = 0;
-        static int pick_up_right_status = 0;
+        
     
         pinMode(INDUCTIVE_PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
         pinMode(PROX_SENSOR_RIGHT_PIN, INPUT_PULLUP);
@@ -347,7 +367,17 @@ void state_controller_task()
                         stepper_motor_step(LEFT, ANTICLOCKWISE);
                         step_count_left++;
                     } else {
-                        weight_count++;
+                        if (scale_1.get_units() >= 25) {
+                            weight_count++;
+                        } else {
+                            is_prox_counting_left = 0;
+                            prox_counter_left = 0;
+                            pick_up_left_status = 0;
+                            step_count_left = 0;
+                        }
+                        
+                        Serial.print(scale_1.get_units(), 1);
+                       
                         program_state = SEARCHING;
                     }
                     break;
@@ -365,7 +395,16 @@ void state_controller_task()
                         stepper_motor_step(RIGHT, ANTICLOCKWISE);
                         step_count_right++;
                     } else {
-                        weight_count++;
+                        if (scale_2.get_units() >= 25) {
+                            weight_count++;
+                        } else {
+                            is_prox_counting_right = 0;
+                            prox_counter_right = 0;
+                            pick_up_right_status = 0;                       
+                            step_count_right = 0;
+                        }
+                        Serial.print(scale_2.get_units(), 1); 
+                    
                         program_state = SEARCHING;
                     }
                     break;
